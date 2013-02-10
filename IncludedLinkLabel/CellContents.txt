@@ -1,0 +1,5 @@
+baseurl(or mirrorlist) = http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
+Scientific Linux 6｜カスタムOSインストールガイド http://support.sakura.ad.jp/manual/vps/mainte/custom_scientificlinux.html
+2008年から「日本版e911」が導入され、緊急通報を発信している携帯電話のGPSが探知できるようになってます。itpro.nikkeibp.co.jp/article/NEWS/2… RT @s_nagato 110はスマホのGPS逆探できるのか知らなかったよ・・・
+설맞이 좋은 일 pic.twitter.com/7crULqVs
+“Mac OS Xで、再起動せずにスワップを解放する方法 - kazuhoのメモ置き場” htn.to/h1MHaZ

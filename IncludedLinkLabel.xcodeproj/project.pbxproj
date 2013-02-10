@@ -19,6 +19,7 @@
 		DA6A06DD16C7D49B00B1332A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06DC16C7D49B00B1332A /* ViewController.m */; };
 		DA6A06E016C7D49B00B1332A /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06DE16C7D49B00B1332A /* ViewController.xib */; };
 		DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */; };
+		DA6A06EA16C7DCB500B1332A /* CellContents.txt in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06E916C7DCB500B1332A /* CellContents.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 		DA6A06DF16C7D49B00B1332A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
 		DA6A06E616C7D51100B1332A /* IncludedLinkLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludedLinkLabel.h; sourceTree = "<group>"; };
 		DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IncludedLinkLabel.m; sourceTree = "<group>"; };
+		DA6A06E916C7DCB500B1332A /* CellContents.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CellContents.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 				DA6A06DC16C7D49B00B1332A /* ViewController.m */,
 				DA6A06DE16C7D49B00B1332A /* ViewController.xib */,
 				DA6A06CA16C7D49B00B1332A /* Supporting Files */,
+				DA6A06E916C7DCB500B1332A /* CellContents.txt */,
 			);
 			path = IncludedLinkLabel;
 			sourceTree = "<group>";
@@ -168,6 +171,7 @@
 				DA6A06D816C7D49B00B1332A /* Default@2x.png in Resources */,
 				DA6A06DA16C7D49B00B1332A /* Default-568h@2x.png in Resources */,
 				DA6A06E016C7D49B00B1332A /* ViewController.xib in Resources */,
+				DA6A06EA16C7DCB500B1332A /* CellContents.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
