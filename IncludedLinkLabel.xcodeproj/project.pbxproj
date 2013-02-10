@@ -20,6 +20,8 @@
 		DA6A06E016C7D49B00B1332A /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06DE16C7D49B00B1332A /* ViewController.xib */; };
 		DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */; };
 		DA6A06EA16C7DCB500B1332A /* CellContents.txt in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06E916C7DCB500B1332A /* CellContents.txt */; };
+		DA6A06ED16C7E1A000B1332A /* IncludedLinkTabelViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06EC16C7E1A000B1332A /* IncludedLinkTabelViewCell.m */; };
+		DA6A06EF16C7E4E800B1332A /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA6A06EE16C7E4E800B1332A /* CoreText.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +44,9 @@
 		DA6A06E616C7D51100B1332A /* IncludedLinkLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludedLinkLabel.h; sourceTree = "<group>"; };
 		DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IncludedLinkLabel.m; sourceTree = "<group>"; };
 		DA6A06E916C7DCB500B1332A /* CellContents.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CellContents.txt; sourceTree = "<group>"; };
+		DA6A06EB16C7E1A000B1332A /* IncludedLinkTabelViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludedLinkTabelViewCell.h; sourceTree = "<group>"; };
+		DA6A06EC16C7E1A000B1332A /* IncludedLinkTabelViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IncludedLinkTabelViewCell.m; sourceTree = "<group>"; };
+		DA6A06EE16C7E4E800B1332A /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA6A06EF16C7E4E800B1332A /* CoreText.framework in Frameworks */,
 				DA6A06C416C7D49B00B1332A /* UIKit.framework in Frameworks */,
 				DA6A06C616C7D49B00B1332A /* Foundation.framework in Frameworks */,
 				DA6A06C816C7D49B00B1332A /* CoreGraphics.framework in Frameworks */,
@@ -80,9 +86,10 @@
 		DA6A06C216C7D49B00B1332A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				DA6A06C316C7D49B00B1332A /* UIKit.framework */,
-				DA6A06C516C7D49B00B1332A /* Foundation.framework */,
 				DA6A06C716C7D49B00B1332A /* CoreGraphics.framework */,
+				DA6A06EE16C7E4E800B1332A /* CoreText.framework */,
+				DA6A06C516C7D49B00B1332A /* Foundation.framework */,
+				DA6A06C316C7D49B00B1332A /* UIKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -97,6 +104,8 @@
 				DA6A06DE16C7D49B00B1332A /* ViewController.xib */,
 				DA6A06CA16C7D49B00B1332A /* Supporting Files */,
 				DA6A06E916C7DCB500B1332A /* CellContents.txt */,
+				DA6A06EB16C7E1A000B1332A /* IncludedLinkTabelViewCell.h */,
+				DA6A06EC16C7E1A000B1332A /* IncludedLinkTabelViewCell.m */,
 			);
 			path = IncludedLinkLabel;
 			sourceTree = "<group>";
@@ -186,6 +195,7 @@
 				DA6A06D416C7D49B00B1332A /* AppDelegate.m in Sources */,
 				DA6A06DD16C7D49B00B1332A /* ViewController.m in Sources */,
 				DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */,
+				DA6A06ED16C7E1A000B1332A /* IncludedLinkTabelViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,6 +283,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "IncludedLinkLabel/IncludedLinkLabel-Prefix.pch";
 				INFOPLIST_FILE = "IncludedLinkLabel/IncludedLinkLabel-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -284,6 +295,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "IncludedLinkLabel/IncludedLinkLabel-Prefix.pch";
 				INFOPLIST_FILE = "IncludedLinkLabel/IncludedLinkLabel-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

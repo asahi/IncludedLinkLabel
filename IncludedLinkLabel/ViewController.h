@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "IncludedLinkLabel.h"
 
-@interface ViewController : UIViewController
+@interface ViewController : UITableViewController<IncludedLinkLabelDelegate, UIActionSheetDelegate>
 
 @end
