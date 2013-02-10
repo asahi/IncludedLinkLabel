@@ -18,6 +18,7 @@
 		DA6A06DA16C7D49B00B1332A /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06D916C7D49B00B1332A /* Default-568h@2x.png */; };
 		DA6A06DD16C7D49B00B1332A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06DC16C7D49B00B1332A /* ViewController.m */; };
 		DA6A06E016C7D49B00B1332A /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = DA6A06DE16C7D49B00B1332A /* ViewController.xib */; };
+		DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,8 @@
 		DA6A06DB16C7D49B00B1332A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		DA6A06DC16C7D49B00B1332A /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		DA6A06DF16C7D49B00B1332A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+		DA6A06E616C7D51100B1332A /* IncludedLinkLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludedLinkLabel.h; sourceTree = "<group>"; };
+		DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IncludedLinkLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +59,8 @@
 		DA6A06B716C7D49B00B1332A = {
 			isa = PBXGroup;
 			children = (
+				DA6A06E616C7D51100B1332A /* IncludedLinkLabel.h */,
+				DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */,
 				DA6A06C916C7D49B00B1332A /* IncludedLinkLabel */,
 				DA6A06C216C7D49B00B1332A /* Frameworks */,
 				DA6A06C116C7D49B00B1332A /* Products */,
@@ -176,6 +181,7 @@
 				DA6A06D016C7D49B00B1332A /* main.m in Sources */,
 				DA6A06D416C7D49B00B1332A /* AppDelegate.m in Sources */,
 				DA6A06DD16C7D49B00B1332A /* ViewController.m in Sources */,
+				DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
