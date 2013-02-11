@@ -10,18 +10,15 @@
 #import "IncludedLinkTabelViewCell.h"
 #import "IncludedLinkLabel.h"
 
-static CGFloat const kEspressoDescriptionTextFontSize = 17;
-static CGFloat const kAttributedTableViewCellVerticalMargin = 20.0f;
+static CGFloat const kEspressoDescriptionTextFontSize = 15;
+static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
 
-static NSRegularExpression *__nameRegularExpression;
-static inline NSRegularExpression * NameRegularExpression() {
-    if (!__nameRegularExpression) {
-        __nameRegularExpression = [[NSRegularExpression alloc] initWithPattern://@"^\\w+" options:NSRegularExpressionCaseInsensitive error:nil];
-                                   @"http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?" options:NSRegularExpressionCaseInsensitive error:NULL];
-
+static NSRegularExpression *_urlRegularExpression;
+static inline NSRegularExpression * URLRegularExpression() {
+    if (!_urlRegularExpression) {
+        _urlRegularExpression = [[NSRegularExpression alloc] initWithPattern:@"http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?" options:NSRegularExpressionCaseInsensitive error:NULL];
     }
-    
-    return __nameRegularExpression;
+    return _urlRegularExpression;
 }
 
 @implementation IncludedLinkTabelViewCell
@@ -35,18 +32,13 @@ static inline NSRegularExpression * NameRegularExpression() {
 
         _descriptionLabel = [[IncludedLinkLabel alloc] initWithFrame:CGRectZero];
         _descriptionLabel.font = [UIFont systemFontOfSize:kEspressoDescriptionTextFontSize];
-        _descriptionLabel.textColor = [UIColor darkGrayColor];
         _descriptionLabel.numberOfLines = 0;
         _descriptionLabel.linkAttributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:(NSString *)kCTUnderlineStyleAttributeName];
 
         NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
-        [mutableActiveLinkAttributes setValue:(id)[[UIColor redColor] CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
+        [mutableActiveLinkAttributes setValue:(id)[[UIColor cyanColor] CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
         [mutableActiveLinkAttributes setValue:[NSNumber numberWithBool:NO] forKey:(NSString *)kCTUnderlineStyleAttributeName];
         _descriptionLabel.activeLinkAttributes = mutableActiveLinkAttributes;
-        _descriptionLabel.highlightedTextColor = [UIColor whiteColor];
-        _descriptionLabel.shadowColor = [UIColor colorWithWhite:0.87 alpha:1.0];
-        _descriptionLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
-        
         [self.contentView addSubview:_descriptionLabel];
     }
     return self;
@@ -64,22 +56,22 @@ static inline NSRegularExpression * NameRegularExpression() {
     _descriptionText = [descriptionText copy];
     [self didChangeValueForKey:@"descriptionText"];
 
-    [_descriptionLabel setText:_descriptionText afterInheritingLabelAttributesAndConfiguringWithBlock:^NSMutableAttributedString *(NSMutableAttributedString *mutableAttributedString) {
+    [_descriptionLabel setText:_descriptionText attributesAndConfiguringWithBlock:^NSMutableAttributedString *(NSMutableAttributedString *mutableAttributedString) {
         NSRange stringRange = NSMakeRange(0, [mutableAttributedString length]);
 
-        NSRegularExpression *regexp = NameRegularExpression();
-        NSRange nameRange = [regexp rangeOfFirstMatchInString:[mutableAttributedString string] options:0 range:stringRange];
-        UIFont *boldSystemFont = [UIFont boldSystemFontOfSize:kEspressoDescriptionTextFontSize];
-        CTFontRef boldFont = CTFontCreateWithName((__bridge CFStringRef)boldSystemFont.fontName, boldSystemFont.pointSize, NULL);
-        if (boldFont) {
-            [mutableAttributedString removeAttribute:(NSString *)kCTFontAttributeName range:nameRange];
-            [mutableAttributedString addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)boldFont range:nameRange];
-            CFRelease(boldFont);
+        NSRegularExpression *regexp = URLRegularExpression();
+        NSRange urlRange = [regexp rangeOfFirstMatchInString:[mutableAttributedString string] options:0 range:stringRange];
+        UIFont *systemFont = [UIFont systemFontOfSize:kEspressoDescriptionTextFontSize];
+        CTFontRef font = CTFontCreateWithName((__bridge CFStringRef)systemFont.fontName, systemFont.pointSize, NULL);
+        if (font) {
+            [mutableAttributedString removeAttribute:(NSString *)kCTFontAttributeName range:urlRange];
+            [mutableAttributedString addAttribute:(NSString *)kCTFontAttributeName value:(__bridge id)font range:urlRange];
+            CFRelease(font);
         }
         return mutableAttributedString;
     }];
 
-    NSRegularExpression *regexp = NameRegularExpression();
+    NSRegularExpression *regexp = URLRegularExpression();
     NSRange linkRange = [regexp rangeOfFirstMatchInString:_descriptionText options:0 range:NSMakeRange(0, [_descriptionText length])];
     NSURL *url = [NSURL URLWithString:[_descriptionText substringWithRange:linkRange]];
     [_descriptionLabel addLinkToURL:url withRange:linkRange];
@@ -87,6 +79,7 @@ static inline NSRegularExpression * NameRegularExpression() {
 
 + (CGFloat)heightForCellWithText:(NSString *)text {
     CGFloat height = 10.0f;
+    // ceilf関数 : x 以上の最小の整数値を計算し，結果を float型で返し
     height += ceilf([text sizeWithFont:[UIFont systemFontOfSize:kEspressoDescriptionTextFontSize] constrainedToSize:CGSizeMake(270.0f, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap].height);
     height += kAttributedTableViewCellVerticalMargin;
     return height;

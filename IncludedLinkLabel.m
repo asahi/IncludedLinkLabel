@@ -22,47 +22,6 @@ NSString * const kBackgroundStrokeColorAttributeName = @"BackgroundStrokeColor";
 NSString * const kBackgroundLineWidthAttributeName = @"BackgroundLineWidth";
 NSString * const kBackgroundCornerRadiusAttributeName = @"BackgroundCornerRadius";
 
-static inline CTTextAlignment CTTextAlignmentFromUITextAlignment(UITextAlignment alignment) {
-	switch (alignment) {
-		case UITextAlignmentLeft: return kCTLeftTextAlignment;
-		case UITextAlignmentCenter: return kCTCenterTextAlignment;
-		case UITextAlignmentRight: return kCTRightTextAlignment;
-		default: return kCTNaturalTextAlignment;
-	}
-}
-
-static inline CTLineBreakMode CTLineBreakModeFromUILineBreakMode(UILineBreakMode lineBreakMode) {
-	switch (lineBreakMode) {
-		case UILineBreakModeWordWrap: return kCTLineBreakByWordWrapping;
-		case UILineBreakModeCharacterWrap: return kCTLineBreakByCharWrapping;
-		case UILineBreakModeClip: return kCTLineBreakByClipping;
-		case UILineBreakModeHeadTruncation: return kCTLineBreakByTruncatingHead;
-		case UILineBreakModeTailTruncation: return kCTLineBreakByTruncatingTail;
-		case UILineBreakModeMiddleTruncation: return kCTLineBreakByTruncatingMiddle;
-		default: return 0;
-	}
-}
-
-static inline NSTextCheckingType NSTextCheckingTypeFromUIDataDetectorType(UIDataDetectorTypes dataDetectorType) {
-    NSTextCheckingType textCheckingType = 0;
-    if (dataDetectorType & UIDataDetectorTypeAddress) {
-        textCheckingType |= NSTextCheckingTypeAddress;
-    }
-
-    if (dataDetectorType & UIDataDetectorTypeCalendarEvent) {
-        textCheckingType |= NSTextCheckingTypeDate;
-    }
-
-    if (dataDetectorType & UIDataDetectorTypeLink) {
-        textCheckingType |= NSTextCheckingTypeLink;
-    }
-
-    if (dataDetectorType & UIDataDetectorTypePhoneNumber) {
-        textCheckingType |= NSTextCheckingTypePhoneNumber;
-    }
-
-    return textCheckingType;
-}
 
 static inline NSDictionary * NSAttributedStringAttributesFromLabel(IncludedLinkLabel *label) {
     NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];
@@ -73,37 +32,15 @@ static inline NSDictionary * NSAttributedStringAttributesFromLabel(IncludedLinkL
 
     [mutableAttributes setObject:(id)[label.textColor CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
 
-    CTTextAlignment alignment = CTTextAlignmentFromUITextAlignment(label.textAlignment);
-    CGFloat lineSpacing = label.leading;
     CGFloat lineSpacingAdjustment = ceilf(label.font.lineHeight - label.font.ascender + label.font.descender);
-    CGFloat lineHeightMultiple = label.lineHeightMultiple;
-    CGFloat topMargin = label.textInsets.top;
-    CGFloat bottomMargin = label.textInsets.bottom;
-    CGFloat leftMargin = label.textInsets.left;
-    CGFloat rightMargin = label.textInsets.right;
-    CGFloat firstLineIndent = label.firstLineIndent + leftMargin;
+    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
 
-    CTLineBreakMode lineBreakMode;
-    if (label.numberOfLines != 1) {
-        lineBreakMode = CTLineBreakModeFromUILineBreakMode(UILineBreakModeWordWrap);
-    } else {
-        lineBreakMode = CTLineBreakModeFromUILineBreakMode(label.lineBreakMode);
-    }
-
-    CTParagraphStyleSetting paragraphStyles[10] = {
-		{.spec = kCTParagraphStyleSpecifierAlignment, .valueSize = sizeof(CTTextAlignment), .value = (const void *)&alignment},
+    CTParagraphStyleSetting paragraphStyles[2] = {
 		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
-        {.spec = kCTParagraphStyleSpecifierLineSpacing, .valueSize = sizeof(CGFloat), .value = (const void *)&lineSpacing},
         {.spec = kCTParagraphStyleSpecifierLineSpacingAdjustment, .valueSize = sizeof (CGFloat), .value = (const void *)&lineSpacingAdjustment},
-        {.spec = kCTParagraphStyleSpecifierLineHeightMultiple, .valueSize = sizeof(CGFloat), .value = (const void *)&lineHeightMultiple},
-        {.spec = kCTParagraphStyleSpecifierFirstLineHeadIndent, .valueSize = sizeof(CGFloat), .value = (const void *)&firstLineIndent},
-        {.spec = kCTParagraphStyleSpecifierParagraphSpacingBefore, .valueSize = sizeof(CGFloat), .value = (const void *)&topMargin},
-        {.spec = kCTParagraphStyleSpecifierParagraphSpacing, .valueSize = sizeof(CGFloat), .value = (const void *)&bottomMargin},
-        {.spec = kCTParagraphStyleSpecifierHeadIndent, .valueSize = sizeof(CGFloat), .value = (const void *)&leftMargin},
-        {.spec = kCTParagraphStyleSpecifierTailIndent, .valueSize = sizeof(CGFloat), .value = (const void *)&rightMargin}
 	};
 
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 10);
+    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 2);
 	[mutableAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
 	CFRelease(paragraphStyle);
 
@@ -182,15 +119,10 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 @synthesize framesetter = _framesetter;
 @synthesize highlightFramesetter = _highlightFramesetter;
 @synthesize delegate = _delegate;
-@synthesize dataDetectorTypes = _dataDetectorTypes;
 @synthesize dataDetector = _dataDetector;
 @synthesize links = _links;
 @synthesize linkAttributes = _linkAttributes;
 @synthesize activeLinkAttributes = _activeLinkAttributes;
-@synthesize leading = _leading;
-@synthesize lineHeightMultiple = _lineHeightMultiple;
-@synthesize firstLineIndent = _firstLineIndent;
-@synthesize textInsets = _textInsets;
 @synthesize truncationTokenString = _truncationTokenString;
 @synthesize activeLink = _activeLink;
 
@@ -209,13 +141,9 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
     self.userInteractionEnabled = YES;
     self.multipleTouchEnabled = NO;
 
-    self.dataDetectorTypes = UIDataDetectorTypeNone;
-
-    self.textInsets = UIEdgeInsetsZero;
-
     self.links = [NSArray array];
 
-    CTLineBreakMode lineBreakMode = CTLineBreakModeFromUILineBreakMode(UILineBreakModeWordWrap);
+    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
     CTParagraphStyleSetting paragraphStyles[1] = {
 		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode}
 	};
@@ -286,16 +214,6 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 }
 
 #pragma mark -
-
-- (void)setDataDetectorTypes:(UIDataDetectorTypes)dataDetectorTypes {
-    _dataDetectorTypes = dataDetectorTypes;
-
-    if (self.dataDetectorTypes != UIDataDetectorTypeNone) {
-        self.dataDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeFromUIDataDetectorType(self.dataDetectorTypes) error:nil];
-    } else {
-        self.dataDetector = nil;
-    }
-}
 
 - (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
                            attributes:(NSDictionary *)attributes
@@ -704,7 +622,7 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
 - (void)setText:(id)text {
     if ([text isKindOfClass:[NSString class]]) {
-        [self setText:text afterInheritingLabelAttributesAndConfiguringWithBlock:nil];
+        [self setText:text attributesAndConfiguringWithBlock:nil];
         return;
     }
 
@@ -712,7 +630,7 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
     self.activeLink = nil;
 
     self.links = [NSArray array];
-    if (self.attributedText && self.dataDetectorTypes != UIDataDetectorTypeNone) {
+    if (self.attributedText) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             NSArray *results = [self.dataDetector matchesInString:[text string] options:0 range:NSMakeRange(0, [text length])];
             if ([results count] > 0) {
@@ -729,15 +647,10 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 }
 
 - (void)setText:(id)text
-afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
+attributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
 {
     NSMutableAttributedString *mutableAttributedString = nil;
-    if ([text isKindOfClass:[NSString class]]) {
         mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:NSAttributedStringAttributesFromLabel(self)];
-    } else {
-        mutableAttributedString = [[NSMutableAttributedString alloc] initWithAttributedString:text];
-        [mutableAttributedString addAttributes:NSAttributedStringAttributesFromLabel(self) range:NSMakeRange(0, [mutableAttributedString length])];
-    }
 
     if (block) {
         mutableAttributedString = block(mutableAttributedString);
@@ -788,7 +701,7 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
     UIColor *oldTextColor = self.textColor;
     [super setTextColor:textColor];
 
-    // Redraw to allow any ColorFromContext attributes a chance to update
+    // Redraw
     if (textColor != oldTextColor) {
         [self setNeedsFramesetter];
         [self setNeedsDisplay];
@@ -803,13 +716,10 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
     }
 
     CGRect textRect = bounds;
-
-    // Calculate height with a minimum of double the font pointSize, to ensure that CTFramesetterSuggestFrameSizeWithConstraints doesn't return CGSizeZero, as it would if textRect height is insufficient.
     textRect.size.height = fmaxf(self.font.pointSize * 2.0f, bounds.size.height);
 
-    // Adjust the text to be in the center vertically, if the text size is smaller than bounds
     CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter, CFRangeMake(0, [self.attributedText length]), NULL, textRect.size, NULL);
-    textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height)); // Fix for iOS 4, CTFramesetterSuggestFrameSizeWithConstraints sometimes returns fractional sizes
+    textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height));
 
     return textRect;
 }
@@ -822,7 +732,7 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
 
     NSAttributedString *originalAttributedText = nil;
 
-    // Adjust the font size to fit width, if necessarry
+    // Adjust font size to fit width
     if (self.adjustsFontSizeToFitWidth && self.numberOfLines > 0) {
         CGFloat textWidth = [self sizeThatFits:CGSizeZero].width;
         CGFloat availableWidth = self.frame.size.width * self.numberOfLines;
