@@ -187,12 +187,10 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 @synthesize links = _links;
 @synthesize linkAttributes = _linkAttributes;
 @synthesize activeLinkAttributes = _activeLinkAttributes;
-@synthesize shadowRadius = _shadowRadius;
 @synthesize leading = _leading;
 @synthesize lineHeightMultiple = _lineHeightMultiple;
 @synthesize firstLineIndent = _firstLineIndent;
 @synthesize textInsets = _textInsets;
-@synthesize verticalAlignment = _verticalAlignment;
 @synthesize truncationTokenString = _truncationTokenString;
 @synthesize activeLink = _activeLink;
 
@@ -573,9 +571,6 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
     // Compensate for y-offset of text rect from vertical positioning
     CGFloat yOffset = 0.0f;
-    if (self.verticalAlignment != IncludedLinkLabelVerticalAlignmentTop) {
-        yOffset -= [self textRectForBounds:self.bounds limitedToNumberOfLines:self.numberOfLines].origin.y;
-    }
 
     CFIndex lineIndex = 0;
     for (id line in lines) {
@@ -816,23 +811,6 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
     CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter, CFRangeMake(0, [self.attributedText length]), NULL, textRect.size, NULL);
     textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height)); // Fix for iOS 4, CTFramesetterSuggestFrameSizeWithConstraints sometimes returns fractional sizes
 
-    if (textSize.height < textRect.size.height) {
-        CGFloat yOffset = 0.0f;
-        switch (self.verticalAlignment) {
-            case IncludedLinkLabelVerticalAlignmentCenter:
-                yOffset = floorf((bounds.size.height - textSize.height) / 2.0f);
-                break;
-            case IncludedLinkLabelVerticalAlignmentBottom:
-                yOffset = bounds.size.height - textSize.height;
-                break;
-            case IncludedLinkLabelVerticalAlignmentTop:
-            default:
-                break;
-        }
-
-        textRect.origin.y += yOffset;
-    }
-
     return textRect;
 }
 
@@ -872,13 +850,6 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
 
     // CoreText draws it's text aligned to the bottom, so we move the CTM here to take our vertical offsets into account
     CGContextTranslateCTM(c, 0.0f, rect.size.height - textRect.origin.y - textRect.size.height);
-
-    // Second, trace the shadow before the actual text, if we have one
-    if (self.shadowColor && !self.highlighted) {
-        CGContextSetShadowWithColor(c, self.shadowOffset, self.shadowRadius, [self.shadowColor CGColor]);
-    } else if (self.highlightedShadowColor) {
-        CGContextSetShadowWithColor(c, self.highlightedShadowOffset, self.highlightedShadowRadius, [self.highlightedShadowColor CGColor]);
-    }
 
     // Finally, draw the text or highlighted text itself (on top of the shadow, if there is one)
     if (self.highlightedTextColor && self.highlighted) {
@@ -998,98 +969,6 @@ afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString
     }
 }
 
-#pragma mark - NSCoding
-
-- (void)encodeWithCoder:(NSCoder *)coder {
-    [super encodeWithCoder:coder];
-
-    [coder encodeInteger:self.dataDetectorTypes forKey:@"dataDetectorTypes"];
-    [coder encodeObject:self.links forKey:@"links"];
-    [coder encodeObject:self.linkAttributes forKey:@"linkAttributes"];
-    [coder encodeObject:self.activeLinkAttributes forKey:@"activeLinkAttributes"];
-    [coder encodeFloat:self.shadowRadius forKey:@"shadowRadius"];
-    [coder encodeFloat:self.highlightedShadowRadius forKey:@"highlightedShadowRadius"];
-    [coder encodeCGSize:self.highlightedShadowOffset forKey:@"highlightedShadowOffset"];
-    [coder encodeObject:self.highlightedShadowColor forKey:@"highlightedShadowColor"];
-    [coder encodeFloat:self.firstLineIndent forKey:@"firstLineIndent"];
-    [coder encodeFloat:self.leading forKey:@"leading"];
-    [coder encodeFloat:self.lineHeightMultiple forKey:@"lineHeightMultiple"];
-    [coder encodeUIEdgeInsets:self.textInsets forKey:@"textInsets"];
-    [coder encodeInteger:self.verticalAlignment forKey:@"verticalAlignment"];
-    [coder encodeObject:self.truncationTokenString forKey:@"truncationTokenString"];
-    [coder encodeObject:self.attributedText forKey:@"attributedText"];
-}
-
-- (id)initWithCoder:(NSCoder *)coder {
-    self = [super initWithCoder:coder];
-    if (!self) {
-        return nil;
-    }
-
-    [self commonInit];
-
-    if ([coder containsValueForKey:@"dataDetectorTypes"]) {
-        self.dataDetectorTypes = [coder decodeIntegerForKey:@"dataDetectorTypes"];
-    }
-
-    if ([coder containsValueForKey:@"links"]) {
-        self.links = [coder decodeObjectForKey:@"links"];
-    }
-
-    if ([coder containsValueForKey:@"linkAttributes"]) {
-        self.linkAttributes = [coder decodeObjectForKey:@"linkAttributes"];
-    }
-
-    if ([coder containsValueForKey:@"activeLinkAttributes"]) {
-        self.activeLinkAttributes = [coder decodeObjectForKey:@"activeLinkAttributes"];
-    }
-
-    if ([coder containsValueForKey:@"shadowRadius"]) {
-        self.shadowRadius = [coder decodeFloatForKey:@"shadowRadius"];
-    }
-
-    if ([coder containsValueForKey:@"highlightedShadowRadius"]) {
-        self.highlightedShadowRadius = [coder decodeFloatForKey:@"highlightedShadowRadius"];
-    }
-
-    if ([coder containsValueForKey:@"highlightedShadowOffset"]) {
-        self.highlightedShadowOffset = [coder decodeCGSizeForKey:@"highlightedShadowOffset"];
-    }
-
-    if ([coder containsValueForKey:@"highlightedShadowColor"]) {
-        self.highlightedShadowColor = [coder decodeObjectForKey:@"highlightedShadowColor"];
-    }
-
-    if ([coder containsValueForKey:@"firstLineIndent"]) {
-        self.firstLineIndent = [coder decodeFloatForKey:@"firstLineIndent"];
-    }
-
-    if ([coder containsValueForKey:@"leading"]) {
-        self.leading = [coder decodeFloatForKey:@"leading"];
-    }
-
-    if ([coder containsValueForKey:@"lineHeightMultiple"]) {
-        self.lineHeightMultiple = [coder decodeFloatForKey:@"lineHeightMultiple"];
-    }
-
-    if ([coder containsValueForKey:@"textInsets"]) {
-        self.textInsets = [coder decodeUIEdgeInsetsForKey:@"textInsets"];
-    }
-
-    if ([coder containsValueForKey:@"verticalAlignment"]) {
-        self.verticalAlignment = [coder decodeIntegerForKey:@"verticalAlignment"];
-    }
-
-    if ([coder containsValueForKey:@"truncationTokenString"]) {
-        self.truncationTokenString = [coder decodeObjectForKey:@"truncationTokenString"];
-    }
-    
-    if ([coder containsValueForKey:@"attributedText"]) {
-        self.attributedText = [coder decodeObjectForKey:@"attributedText"];
-    }
-    
-    return self;
-}
 
 @end
 

@@ -9,12 +9,6 @@
 #import <Foundation/Foundation.h>
 #import <CoreText/CoreText.h>
 
-typedef enum {
-    IncludedLinkLabelVerticalAlignmentCenter   = 0,
-    IncludedLinkLabelVerticalAlignmentTop      = 1,
-    IncludedLinkLabelVerticalAlignmentBottom   = 2,
-} IncludedLinkLabelVerticalAlignment;
-
 @protocol IncludedLinkLabelDelegate;
 
 @protocol IncludedLinkLabel <NSObject>
@@ -28,16 +22,11 @@ typedef enum {
 @property (nonatomic, strong) NSDictionary *linkAttributes;
 @property (nonatomic, strong) NSDictionary *activeLinkAttributes;
 @property (nonatomic, assign) UIDataDetectorTypes dataDetectorTypes;
-@property (nonatomic, assign) CGFloat shadowRadius;
-@property (nonatomic, assign) CGFloat highlightedShadowRadius;
 @property (nonatomic, assign) CGFloat lineHeightMultiple;
 @property (nonatomic, assign) CGFloat leading;
 @property (nonatomic, assign) UIEdgeInsets textInsets;
 @property (nonatomic, assign) CGFloat firstLineIndent;
 @property (nonatomic, strong) NSString *truncationTokenString;
-@property (nonatomic, assign) IncludedLinkLabelVerticalAlignment verticalAlignment;
-@property (nonatomic, assign) CGSize highlightedShadowOffset;
-@property (nonatomic, strong) UIColor *highlightedShadowColor;
 
 - (void)setText:(id)text;
 - (void)setText:(id)text
