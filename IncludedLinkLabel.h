@@ -9,34 +9,45 @@
 #import <Foundation/Foundation.h>
 #import <CoreText/CoreText.h>
 
+typedef enum {
+    IncludedLinkLabelVerticalAlignmentCenter   = 0,
+    IncludedLinkLabelVerticalAlignmentTop      = 1,
+    IncludedLinkLabelVerticalAlignmentBottom   = 2,
+} IncludedLinkLabelVerticalAlignment;
+
 @protocol IncludedLinkLabelDelegate;
 
 @protocol IncludedLinkLabel <NSObject>
 @property (nonatomic, copy) id text;
 @end
 
+
 @interface IncludedLinkLabel : UILabel <IncludedLinkLabel, UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
-@property (readonly, nonatomic, strong) NSArray *links;
+@property (readwrite, nonatomic, copy) NSAttributedString *attributedText;
 @property (nonatomic, strong) NSDictionary *linkAttributes;
 @property (nonatomic, strong) NSDictionary *activeLinkAttributes;
+@property (nonatomic, assign) UIDataDetectorTypes dataDetectorTypes;
+@property (nonatomic, assign) CGFloat shadowRadius;
+@property (nonatomic, assign) CGFloat highlightedShadowRadius;
+@property (nonatomic, assign) CGFloat lineHeightMultiple;
+@property (nonatomic, assign) CGFloat leading;
+@property (nonatomic, assign) UIEdgeInsets textInsets;
+@property (nonatomic, assign) CGFloat firstLineIndent;
+@property (nonatomic, strong) NSString *truncationTokenString;
+@property (nonatomic, assign) IncludedLinkLabelVerticalAlignment verticalAlignment;
+@property (nonatomic, assign) CGSize highlightedShadowOffset;
+@property (nonatomic, strong) UIColor *highlightedShadowColor;
 
 - (void)setText:(id)text;
 - (void)setText:(id)text
 afterInheritingLabelAttributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;
+- (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range;
 
-@property (readwrite, nonatomic, copy) NSAttributedString *attributedText;
-
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result;
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
-                           attributes:(NSDictionary *)attributes;
-- (void)addLinkToURL:(NSURL *)url
-           withRange:(NSRange)range;
 @end
 
-@protocol IncludedLinkLabelDelegate <NSObject>
 
+@protocol IncludedLinkLabelDelegate <NSObject>
 @optional
-- (void)attributedLabel:(IncludedLinkLabel *)label
-   didSelectLinkWithURL:(NSURL *)url;
+- (void)includedLinkLabel:(IncludedLinkLabel *)label didSelectLinkWithURL:(NSURL *)url;
 @end

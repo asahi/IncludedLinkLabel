@@ -53,5 +53,20 @@
     return cell;
 }
 
+#pragma mark - IncludedLinkLabelDelegate
+
+- (void)includedLinkLabel:(IncludedLinkLabel *)label didSelectLinkWithURL:(NSURL *)url {
+    [[[UIActionSheet alloc] initWithTitle:[url absoluteString] delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil otherButtonTitles:NSLocalizedString(@"Open Link in Safari", nil), nil] showInView:self.view];
+}
+
+#pragma mark - UIActionSheetDelegate
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == actionSheet.cancelButtonIndex) {
+        return;
+    }
+
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:actionSheet.title]];
+}
 
 @end
