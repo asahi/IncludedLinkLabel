@@ -18,10 +18,8 @@
 
 @interface IncludedLinkLabel : UILabel <IncludedLinkLabel, UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
-@property (readwrite, nonatomic, copy) NSAttributedString *attributedText;
 @property (nonatomic, strong) NSDictionary *linkAttributes;
 @property (nonatomic, strong) NSDictionary *activeLinkAttributes;
-@property (nonatomic, strong) NSString *truncationTokenString;
 
 - (void)setText:(id)text;
 - (void)setText:(id)text attributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;
