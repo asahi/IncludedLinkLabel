@@ -184,7 +184,6 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 }
 
 - (void)setNeedsFramesetter {
-    // Reset the rendered attributed text so it has a chance to regenerate
     self.renderedAttributedText = nil;
 
     _needsFramesetter = YES;
@@ -300,9 +299,8 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
         return NSNotFound;
     }
 
-    // Offset tap coordinates by textRect origin to make them relative to the origin of frame
+    // Offset tap coordinates by textRect
     p = CGPointMake(p.x - textRect.origin.x, p.y - textRect.origin.y);
-    // Convert tap coordinates (start at top left) to CT coordinates (start at bottom left)
     p = CGPointMake(p.x, textRect.size.height - p.y);
 
     CGMutablePathRef path = CGPathCreateMutable();
