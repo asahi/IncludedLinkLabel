@@ -1,3 +1,4 @@
+Not link test : This contents is not included link URL in the string
 baseurl(or mirrorlist) = http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 Scientific Linux 6｜カスタムOSインストールガイド http://support.sakura.ad.jp/manual/vps/mainte/custom_scientificlinux.html
 ソーシャル・ネットワーキング サービス [mixi(ミクシィ)]　http://mixi.jp

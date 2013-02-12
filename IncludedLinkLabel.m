@@ -256,21 +256,21 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
         CGPoint lineOrigin = lineOrigins[lineIndex];
         CTLineRef line = CFArrayGetValueAtIndex(lines, lineIndex);
 
-        // Get bounding information of line
+        // lineのbounding情報を取得
         CGFloat ascent = 0.0f, descent = 0.0f, leading = 0.0f;
         CGFloat width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
         CGFloat yMin = floor(lineOrigin.y - descent);
         CGFloat yMax = ceil(lineOrigin.y + ascent);
 
-        // Check if we've already passed the line
+        // 既にラインを過ぎちゃったかを確認
         if (p.y > yMax) {
             break;
         }
-        // Check if the point is within this line vertically
+        // ポイントがこのラインの内にあるかを確認（vertically）
         if (p.y >= yMin) {
-            // Check if the point is within this line horizontally
+            // ポイントがこのラインの内にあるかを確認（horizontally）
             if (p.x >= lineOrigin.x && p.x <= lineOrigin.x + width) {
-                // Convert CT coordinates to line-relative coordinates
+                // Convert coordinates（CT coordinates → line-relative coordinates）
                 CGPoint relativePoint = CGPointMake(p.x - lineOrigin.x, p.y - lineOrigin.y);
                 idx = CTLineGetStringIndexForPosition(line, relativePoint);
                 break;

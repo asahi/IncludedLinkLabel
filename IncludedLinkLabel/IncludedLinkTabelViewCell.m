@@ -73,8 +73,10 @@ static inline NSRegularExpression * URLRegularExpression() {
 
     NSRegularExpression *regexp = URLRegularExpression();
     NSRange linkRange = [regexp rangeOfFirstMatchInString:_descriptionText options:0 range:NSMakeRange(0, [_descriptionText length])];
-    NSURL *url = [NSURL URLWithString:[_descriptionText substringWithRange:linkRange]];
-    [_descriptionLabel addLinkToURL:url withRange:linkRange];
+    if (linkRange.length > 0) {
+        NSURL *url = [NSURL URLWithString:[_descriptionText substringWithRange:linkRange]];
+        [_descriptionLabel addLinkToURL:url withRange:linkRange];
+    }
 }
 
 + (CGFloat)heightForCellWithText:(NSString *)text {
