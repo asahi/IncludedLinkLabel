@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DA4605EF16CBDD4000EEEA7F /* IncludedLinkLabelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DA4605EE16CBDD4000EEEA7F /* IncludedLinkLabelManager.m */; };
 		DA6A06C416C7D49B00B1332A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA6A06C316C7D49B00B1332A /* UIKit.framework */; };
 		DA6A06C616C7D49B00B1332A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA6A06C516C7D49B00B1332A /* Foundation.framework */; };
 		DA6A06C816C7D49B00B1332A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA6A06C716C7D49B00B1332A /* CoreGraphics.framework */; };
@@ -25,6 +26,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		DA4605ED16CBDD4000EEEA7F /* IncludedLinkLabelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncludedLinkLabelManager.h; sourceTree = "<group>"; };
+		DA4605EE16CBDD4000EEEA7F /* IncludedLinkLabelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IncludedLinkLabelManager.m; sourceTree = "<group>"; };
 		DA6A06C016C7D49B00B1332A /* IncludedLinkLabel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IncludedLinkLabel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA6A06C316C7D49B00B1332A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		DA6A06C516C7D49B00B1332A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -67,6 +70,8 @@
 		DA6A06B716C7D49B00B1332A = {
 			isa = PBXGroup;
 			children = (
+				DA4605ED16CBDD4000EEEA7F /* IncludedLinkLabelManager.h */,
+				DA4605EE16CBDD4000EEEA7F /* IncludedLinkLabelManager.m */,
 				DA6A06E616C7D51100B1332A /* IncludedLinkLabel.h */,
 				DA6A06E716C7D51100B1332A /* IncludedLinkLabel.m */,
 				DA6A06C916C7D49B00B1332A /* IncludedLinkLabel */,
@@ -196,6 +201,7 @@
 				DA6A06DD16C7D49B00B1332A /* ViewController.m in Sources */,
 				DA6A06E816C7D51100B1332A /* IncludedLinkLabel.m in Sources */,
 				DA6A06ED16C7E1A000B1332A /* IncludedLinkTabelViewCell.m in Sources */,
+				DA4605EF16CBDD4000EEEA7F /* IncludedLinkLabelManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

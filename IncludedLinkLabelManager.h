@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-@interface IncludedLinkLabelManager : NSObject
+@class IncludedLinkLabel;
 
+@interface IncludedLinkLabelManager : NSObject
++ (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label;
++ (NSAttributedString *)nsAttributedStringBySettingColorFromContext:(NSAttributedString *)attributedString color:(UIColor *)color;
 @end
