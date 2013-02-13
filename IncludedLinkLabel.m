@@ -7,49 +7,9 @@
 //
 
 #import "IncludedLinkLabel.h"
+#import "IncludedLinkLabelManager.h"
 
-static inline NSDictionary * NSAttributedStringAttributesFromLabel(IncludedLinkLabel *label) {
-    NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];
 
-    CTFontRef font = CTFontCreateWithName((__bridge CFStringRef)label.font.fontName, label.font.pointSize, NULL);
-    [mutableAttributes setObject:(__bridge id)font forKey:(NSString *)kCTFontAttributeName];
-    CFRelease(font);
-
-    [mutableAttributes setObject:(id)[label.textColor CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
-
-    CGFloat lineSpacingAdjustment = ceilf(label.font.lineHeight - label.font.ascender + label.font.descender);
-    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
-
-    CTParagraphStyleSetting paragraphStyles[2] = {
-		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
-        {.spec = kCTParagraphStyleSpecifierLineSpacingAdjustment, .valueSize = sizeof (CGFloat), .value = (const void *)&lineSpacingAdjustment},
-	};
-
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 2);
-	[mutableAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
-	CFRelease(paragraphStyle);
-
-    return [NSDictionary dictionaryWithDictionary:mutableAttributes];
-}
-
-static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(NSAttributedString *attributedString, UIColor *color) {
-    if (!color) {
-        return attributedString;
-    }
-
-    CGColorRef colorRef = color.CGColor;
-    NSMutableAttributedString *mutableAttributedString = [attributedString mutableCopy];
-    [mutableAttributedString enumerateAttribute:(NSString *)kCTForegroundColorFromContextAttributeName inRange:NSMakeRange(0, [mutableAttributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
-        CFBooleanRef usesColorFromContext = (__bridge CFBooleanRef)value;
-        if (usesColorFromContext && CFBooleanGetValue(usesColorFromContext)) {
-            CFRange updateRange = CFRangeMake(range.location, range.length);
-            CFAttributedStringSetAttribute((__bridge CFMutableAttributedStringRef)mutableAttributedString, updateRange, kCTForegroundColorAttributeName, colorRef);
-            CFAttributedStringRemoveAttribute((__bridge CFMutableAttributedStringRef)mutableAttributedString, updateRange, kCTForegroundColorFromContextAttributeName);
-        }
-    }];
-
-    return mutableAttributedString;
-}
 
 @interface IncludedLinkLabel ()
 @property (nonatomic, copy) NSAttributedString *inactiveAttributedText;
@@ -82,18 +42,19 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
 @synthesize attributedText = _attributedText;
 
-- (id)initWithFrame:(CGRect)frame {
+- (id)initWithFrame:(CGRect)frame
+{
     self = [super initWithFrame:frame];
     if (!self) {
         return nil;
     }
-
     [self commonInit];
 
     return self;
 }
 
-- (void)commonInit {
+- (void)commonInit
+{
     self.userInteractionEnabled = YES;
     self.multipleTouchEnabled = NO;
 
@@ -122,29 +83,31 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
     CFRelease(paragraphStyle);
 }
 
-- (void)dealloc {
+- (void)dealloc
+{
     if (_framesetter) CFRelease(_framesetter);
     if (_highlightFramesetter) CFRelease(_highlightFramesetter);
 }
 
 #pragma mark -
 
-- (void)setAttributedText:(NSAttributedString *)text {
+- (void)setAttributedText:(NSAttributedString *)text
+{
     if ([text isEqualToAttributedString:_attributedText]) {
         return;
     }
-
     _attributedText = [text copy];
-
     [self setNeedsFramesetter];
 }
 
-- (void)setNeedsFramesetter {
+- (void)setNeedsFramesetter
+{
     self.renderedAttributedText = nil;
     _needsFramesetter = YES;
 }
 
-- (CTFramesetterRef)framesetter {
+- (CTFramesetterRef)framesetter
+{
     if (_needsFramesetter) {
         @synchronized(self) {
             if (_framesetter) CFRelease(_framesetter);
@@ -155,15 +118,14 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
             _needsFramesetter = NO;
         }
     }
-
     return _framesetter;
 }
 
-- (NSAttributedString *)renderedAttributedText {
+- (NSAttributedString *)renderedAttributedText
+{
     if (!_renderedAttributedText) {
-        self.renderedAttributedText = NSAttributedStringBySettingColorFromContext(self.attributedText, self.textColor);
+        self.renderedAttributedText = [IncludedLinkLabelManager nsAttributedStringBySettingColorFromContext:self.attributedText color:self.textColor];
     }
-
     return _renderedAttributedText;
 }
 
@@ -190,7 +152,8 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
     }
 }
 
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result {
+- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
+{
     [self addLinkWithTextCheckingResult:result attributes:self.linkAttributes];
 }
 
@@ -202,7 +165,8 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
 #pragma mark -
 
-- (NSTextCheckingResult *)linkAtCharacterIndex:(CFIndex)idx {
+- (NSTextCheckingResult *)linkAtCharacterIndex:(CFIndex)idx
+{
     for (NSTextCheckingResult *result in self.links) {
         if (NSLocationInRange((NSUInteger)idx, result.range)) {
             return result;
@@ -211,13 +175,14 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
     return nil;
 }
 
-- (NSTextCheckingResult *)linkAtPoint:(CGPoint)p {
+- (NSTextCheckingResult *)linkAtPoint:(CGPoint)p
+{
     CFIndex idx = [self characterIndexAtPoint:p];
-
     return [self linkAtCharacterIndex:idx];
 }
 
-- (CFIndex)characterIndexAtPoint:(CGPoint)p {
+- (CFIndex)characterIndexAtPoint:(CGPoint)p
+{
     if (!CGRectContainsPoint(self.bounds, p)) {
         return NSNotFound;
     }
@@ -378,7 +343,8 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
 #pragma mark - IncludedLinkLabel
 
-- (void)setText:(id)text {
+- (void)setText:(id)text
+{
     if ([text isKindOfClass:[NSString class]]) {
         [self setText:text attributesWithBlock:nil];
         return;
@@ -407,7 +373,7 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
 {
     NSMutableAttributedString *mutableAttributedString = nil;
-        mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:NSAttributedStringAttributesFromLabel(self)];
+    mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:[IncludedLinkLabelManager nsAttributedStringAttributesFromLabel:self]];
 
     if (block) {
         mutableAttributedString = block(mutableAttributedString);
@@ -416,7 +382,8 @@ attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *m
     [self setText:mutableAttributedString];
 }
 
-- (void)setActiveLink:(NSTextCheckingResult *)activeLink {
+- (void)setActiveLink:(NSTextCheckingResult *)activeLink
+{
     _activeLink = activeLink;
 
     if (_activeLink && [self.activeLinkAttributes count] > 0) {
@@ -452,7 +419,8 @@ attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *m
     return textRect;
 }
 
-- (void)drawTextInRect:(CGRect)rect {
+- (void)drawTextInRect:(CGRect)rect
+{
     if (!self.attributedText) {
         [super drawTextInRect:rect];
         return;
