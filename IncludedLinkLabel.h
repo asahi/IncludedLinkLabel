@@ -22,7 +22,7 @@
 @property (nonatomic, strong) NSDictionary *activeLinkAttributes;
 
 - (void)setText:(id)text;
-- (void)setText:(id)text attributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;
+- (void)setText:(id)text attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;
 - (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range;
 
 @end

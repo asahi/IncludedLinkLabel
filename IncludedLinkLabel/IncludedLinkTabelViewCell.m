@@ -56,7 +56,7 @@ static inline NSRegularExpression * URLRegularExpression() {
     _descriptionText = [descriptionText copy];
     [self didChangeValueForKey:@"descriptionText"];
 
-    [_descriptionLabel setText:_descriptionText attributesAndConfiguringWithBlock:^NSMutableAttributedString *(NSMutableAttributedString *mutableAttributedString) {
+    [_descriptionLabel setText:_descriptionText attributesWithBlock:^NSMutableAttributedString *(NSMutableAttributedString *mutableAttributedString) {
         NSRange stringRange = NSMakeRange(0, [mutableAttributedString length]);
 
         NSRegularExpression *regexp = URLRegularExpression();

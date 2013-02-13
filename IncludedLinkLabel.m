@@ -380,7 +380,7 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
 
 - (void)setText:(id)text {
     if ([text isKindOfClass:[NSString class]]) {
-        [self setText:text attributesAndConfiguringWithBlock:nil];
+        [self setText:text attributesWithBlock:nil];
         return;
     }
 
@@ -400,12 +400,11 @@ static inline NSAttributedString * NSAttributedStringBySettingColorFromContext(N
             }
         });
     }
-
     [super setText:[self.attributedText string]];
 }
 
 - (void)setText:(id)text
-attributesAndConfiguringWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
+attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
 {
     NSMutableAttributedString *mutableAttributedString = nil;
         mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:NSAttributedStringAttributesFromLabel(self)];
