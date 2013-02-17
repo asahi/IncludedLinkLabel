@@ -11,6 +11,13 @@
 
 @implementation IncludedLinkLabelManager
 
++ (NSRegularExpression *)urlRegularExpression {
+    NSString *urlRegularPattern = @"http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?";
+    NSRegularExpression *urlRegularExpression = [[NSRegularExpression alloc] initWithPattern:urlRegularPattern options:NSRegularExpressionCaseInsensitive error:NULL];
+    return urlRegularExpression;
+}
+
+
 + (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label
 {
     NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];

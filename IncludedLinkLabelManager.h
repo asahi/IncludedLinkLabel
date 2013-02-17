@@ -11,6 +11,7 @@
 @class IncludedLinkLabel;
 
 @interface IncludedLinkLabelManager : NSObject
++ (NSRegularExpression *)urlRegularExpression;
 + (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label;
 + (NSAttributedString *)nsAttributedStringBySettingColorFromContext:(NSAttributedString *)attributedString color:(UIColor *)color;
 @end

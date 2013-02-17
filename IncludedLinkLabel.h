@@ -11,12 +11,8 @@
 
 @protocol IncludedLinkLabelDelegate;
 
-@protocol IncludedLinkLabel <NSObject>
-@property (nonatomic, copy) id text;
-@end
 
-
-@interface IncludedLinkLabel : UILabel <IncludedLinkLabel, UIGestureRecognizerDelegate>
+@interface IncludedLinkLabel : UILabel <UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
 @property (nonatomic, strong) NSDictionary *linkAttributes;
 @property (nonatomic, strong) NSDictionary *activeLinkAttributes;

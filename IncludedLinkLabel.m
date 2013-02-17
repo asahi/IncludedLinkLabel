@@ -9,14 +9,12 @@
 #import "IncludedLinkLabel.h"
 #import "IncludedLinkLabelManager.h"
 
-
-
 @interface IncludedLinkLabel ()
+@property (nonatomic, copy) NSAttributedString *attributedText;
 @property (nonatomic, copy) NSAttributedString *inactiveAttributedText;
 @property (nonatomic, copy) NSAttributedString *renderedAttributedText;
 @property (nonatomic, assign) CTFramesetterRef framesetter;
 @property (nonatomic, assign) CTFramesetterRef highlightFramesetter;
-@property (nonatomic, strong) NSDataDetector *dataDetector;
 @property (nonatomic, strong) NSArray *links;
 @property (nonatomic, strong) NSTextCheckingResult *activeLink;
 
@@ -60,27 +58,15 @@
 
     self.links = [NSArray array];
 
-    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
-    CTParagraphStyleSetting paragraphStyles[1] = {
-		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode}
-	};
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 1);
-
     NSMutableDictionary *mutableLinkAttributes = [NSMutableDictionary dictionary];
-    [mutableLinkAttributes setObject:(id)[[UIColor blueColor] CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
-    [mutableLinkAttributes setObject:[NSNumber numberWithBool:YES] forKey:(NSString *)kCTUnderlineStyleAttributeName];
-	[mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
-
+    UIColor *linkColor = [UIColor colorWithRed:102.0/255 green:175.0/255 blue:204.0/255 alpha:1.0];
+    [mutableLinkAttributes setObject:(id)[linkColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
     self.linkAttributes = [NSDictionary dictionaryWithDictionary:mutableLinkAttributes];
 
     NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
-    [mutableActiveLinkAttributes setObject:(id)[[UIColor redColor] CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
-    [mutableActiveLinkAttributes setObject:[NSNumber numberWithBool:NO] forKey:(NSString *)kCTUnderlineStyleAttributeName];
-    [mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
-
+    UIColor *activeColor = [UIColor colorWithRed:235.0/255 green:127.0/255 blue:94.0/255 alpha:1.0];
+    [mutableActiveLinkAttributes setObject:(id)[activeColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
     self.activeLinkAttributes = [NSDictionary dictionaryWithDictionary:mutableActiveLinkAttributes];
-
-    CFRelease(paragraphStyle);
 }
 
 - (void)dealloc
@@ -131,14 +117,7 @@
 
 #pragma mark -
 
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
-                           attributes:(NSDictionary *)attributes
-{
-    [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:attributes];
-}
-
-- (void)addLinksWithTextCheckingResults:(NSArray *)results
-                             attributes:(NSDictionary *)attributes
+- (void)addLinksWithTextCheckingResults:(NSArray *)results attributes:(NSDictionary *)attributes
 {
     self.links = [self.links arrayByAddingObjectsFromArray:results];
 
@@ -152,13 +131,17 @@
     }
 }
 
+- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result attributes:(NSDictionary *)attributes
+{
+    [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:attributes];
+}
+
 - (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
 {
     [self addLinkWithTextCheckingResult:result attributes:self.linkAttributes];
 }
 
-- (void)addLinkToURL:(NSURL *)url
-           withRange:(NSRange)range
+- (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range
 {
     [self addLinkWithTextCheckingResult:[NSTextCheckingResult linkCheckingResultWithRange:range URL:url]];
 }
@@ -349,36 +332,30 @@
         [self setText:text attributesWithBlock:nil];
         return;
     }
-
     self.attributedText = text;
     self.activeLink = nil;
-
     self.links = [NSArray array];
-    if (self.attributedText) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSArray *results = [self.dataDetector matchesInString:[text string] options:0 range:NSMakeRange(0, [text length])];
-            if ([results count] > 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    if ([[self.attributedText string] isEqualToString:[text string]]) {
-                        [self addLinksWithTextCheckingResults:results attributes:self.linkAttributes];
-                    }
-                });
-            }
-        });
-    }
+    
     [super setText:[self.attributedText string]];
+
+    NSRegularExpression *regexp = [IncludedLinkLabelManager urlRegularExpression];
+    NSRange linkRange = [regexp rangeOfFirstMatchInString:self.text options:0 range:NSMakeRange(0, [self.text length])];
+    if (linkRange.length > 0) {
+        NSURL *url = [NSURL URLWithString:[self.text substringWithRange:linkRange]];
+        [self addLinkToURL:url withRange:linkRange];
+    }
+
 }
 
-- (void)setText:(id)text
-attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
+- (void)setText:(id)text attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block
 {
     NSMutableAttributedString *mutableAttributedString = nil;
+    if ([text isKindOfClass:[NSString class]]) {
     mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:[IncludedLinkLabelManager nsAttributedStringAttributesFromLabel:self]];
-
+    }
     if (block) {
         mutableAttributedString = block(mutableAttributedString);
     }
-
     [self setText:mutableAttributedString];
 }
 

@@ -10,7 +10,7 @@
 #import "IncludedLinkTabelViewCell.h"
 
 @interface ViewController ()
-@property (nonatomic, weak) NSArray *contents;
+@property (nonatomic, strong) NSArray *contents;
 @end
 
 @implementation ViewController
@@ -20,7 +20,7 @@
     [super viewDidLoad];
 
     NSString *filePath = [[NSBundle mainBundle] pathForResource:@"CellContents" ofType:@"txt"];
-    _contents = [[NSString stringWithContentsOfFile:filePath usedEncoding:nil error:nil] componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+    self.contents = [[NSString stringWithContentsOfFile:filePath usedEncoding:nil error:nil] componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -53,6 +53,10 @@
     return cell;
 }
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
 #pragma mark - IncludedLinkLabelDelegate
 
 - (void)includedLinkLabel:(IncludedLinkLabel *)label didSelectLinkWithURL:(NSURL *)url {
@@ -65,7 +69,6 @@
     if (buttonIndex == actionSheet.cancelButtonIndex) {
         return;
     }
-
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:actionSheet.title]];
 }
 

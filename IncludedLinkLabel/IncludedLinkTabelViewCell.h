@@ -11,7 +11,7 @@
 @class IncludedLinkLabel;
 
 @interface IncludedLinkTabelViewCell : UITableViewCell
-@property (nonatomic, copy) NSString *descriptionText;
+@property (nonatomic, strong) NSString *descriptionText;
 @property (nonatomic, strong) IncludedLinkLabel *descriptionLabel;
 
 + (CGFloat)heightForCellWithText:(NSString *)text;
