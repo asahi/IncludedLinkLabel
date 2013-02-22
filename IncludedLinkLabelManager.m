@@ -9,6 +9,7 @@
 #import "IncludedLinkLabelManager.h"
 #import "IncludedLinkLabel.h"
 
+
 @implementation IncludedLinkLabelManager
 
 + (NSRegularExpression *)urlRegularExpression {
@@ -57,6 +58,25 @@
             CFRange updateRange = CFRangeMake(range.location, range.length);
             CFAttributedStringSetAttribute((__bridge CFMutableAttributedStringRef)mutableAttributedString, updateRange, kCTForegroundColorAttributeName, colorRef);
             CFAttributedStringRemoveAttribute((__bridge CFMutableAttributedStringRef)mutableAttributedString, updateRange, kCTForegroundColorFromContextAttributeName);
+        }
+    }];
+
+    return mutableAttributedString;
+}
+
+
++ (NSAttributedString *) nsAttributedStringByScalingFontSize:(NSAttributedString *)attributedString scale:(CGFloat)scale minimumFontSize:(CGFloat)minFontSize {
+    NSMutableAttributedString *mutableAttributedString = [attributedString mutableCopy];
+    [mutableAttributedString enumerateAttribute:(NSString *)kCTFontAttributeName
+                                        inRange:NSMakeRange(0, [mutableAttributedString length])
+                                        options:0
+                                     usingBlock:^(id value, NSRange range, BOOL *stop) {
+                                         CTFontRef font = (__bridge CTFontRef)value;
+                                         if (font) {
+                                             CGFloat scaledFontSize = floorf(CTFontGetSize(font) * scale);
+                                             CTFontRef scaledFont = CTFontCreateCopyWithAttributes(font, fmaxf(scaledFontSize, minFontSize), NULL, NULL);
+                                             CFAttributedStringSetAttribute((CFMutableAttributedStringRef)mutableAttributedString, CFRangeMake(range.location, range.length), kCTFontAttributeName, scaledFont);
+            CFRelease(scaledFont);
         }
     }];
 

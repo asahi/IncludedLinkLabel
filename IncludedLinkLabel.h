@@ -11,7 +11,6 @@
 
 @protocol IncludedLinkLabelDelegate;
 
-
 @interface IncludedLinkLabel : UILabel <UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
 @property (nonatomic, strong) NSDictionary *linkAttributes;

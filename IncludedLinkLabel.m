@@ -9,6 +9,12 @@
 #import "IncludedLinkLabel.h"
 #import "IncludedLinkLabelManager.h"
 
+static NSString* const kBackgroundFillColorAttributeName = @"BackgroundFillColor";
+static NSString* const kBackgroundStrokeColorAttributeName = @"BackgroundStrokeColor";
+static NSString* const kBackgroundLineWidthAttributeName = @"BackgroundLineWidth";
+static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCornerRadius";
+
+
 @interface IncludedLinkLabel ()
 @property (nonatomic, copy) NSAttributedString *attributedText;
 @property (nonatomic, copy) NSAttributedString *inactiveAttributedText;
@@ -17,19 +23,7 @@
 @property (nonatomic, assign) CTFramesetterRef highlightFramesetter;
 @property (nonatomic, strong) NSArray *links;
 @property (nonatomic, strong) NSTextCheckingResult *activeLink;
-
-- (void)commonInit;
-- (void)setNeedsFramesetter;
-- (void)addLinksWithTextCheckingResults:(NSArray *)results
-                             attributes:(NSDictionary *)attributes;
-- (NSTextCheckingResult *)linkAtCharacterIndex:(CFIndex)idx;
-- (NSTextCheckingResult *)linkAtPoint:(CGPoint)p;
-- (CFIndex)characterIndexAtPoint:(CGPoint)p;
-- (void)drawFramesetter:(CTFramesetterRef)framesetter
-       attributedString:(NSAttributedString *)attributedString
-              textRange:(CFRange)textRange
-                 inRect:(CGRect)rect
-                context:(CGContextRef)c;
+@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 @end
 
 @implementation IncludedLinkLabel {
@@ -64,9 +58,17 @@
     self.linkAttributes = [NSDictionary dictionaryWithDictionary:mutableLinkAttributes];
 
     NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
-    UIColor *activeColor = [UIColor colorWithRed:235.0/255 green:127.0/255 blue:94.0/255 alpha:1.0];
-    [mutableActiveLinkAttributes setObject:(id)[activeColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
+//    UIColor *activeColor = [UIColor colorWithRed:235.0/255 green:127.0/255 blue:94.0/255 alpha:1.0];
+//    [mutableActiveLinkAttributes setObject:(id)[activeColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
+    [mutableActiveLinkAttributes setValue:(id)[[UIColor redColor] CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
+    [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:1.0f] forKey:(NSString *)kBackgroundLineWidthAttributeName];
+    [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:5.0f] forKey:(NSString *)kBackgroundCornerRadiusAttributeName];
+
     self.activeLinkAttributes = [NSDictionary dictionaryWithDictionary:mutableActiveLinkAttributes];
+
+    self.tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    [self.tapGestureRecognizer setDelegate:self];
+    [self addGestureRecognizer:self.tapGestureRecognizer];
 }
 
 - (void)dealloc
@@ -151,7 +153,9 @@
 - (NSTextCheckingResult *)linkAtCharacterIndex:(CFIndex)idx
 {
     for (NSTextCheckingResult *result in self.links) {
-        if (NSLocationInRange((NSUInteger)idx, result.range)) {
+//      if (NSLocationInRange((NSUInteger)idx, result.range)) {
+        NSRange range = result.range;
+        if ((CFIndex)range.location <= idx && idx <= (CFIndex)(range.location + range.length - 1)) {
             return result;
         }
     }
@@ -240,10 +244,11 @@
     CGMutablePathRef path = CGPathCreateMutable();
     CGPathAddRect(path, NULL, rect);
     CTFrameRef frame = CTFramesetterCreateFrame(framesetter, textRange, path, NULL);
+
+   [self drawBackground:frame inRect:rect context:c];
+
     CFArrayRef lines = CTFrameGetLines(frame);
     NSInteger numberOfLines = self.numberOfLines > 0 ? MIN(self.numberOfLines, CFArrayGetCount(lines)) : CFArrayGetCount(lines);
-    BOOL truncateLastLine = (self.lineBreakMode == UILineBreakModeHeadTruncation || self.lineBreakMode == UILineBreakModeMiddleTruncation || self.lineBreakMode == UILineBreakModeTailTruncation);
-
     CGPoint lineOrigins[numberOfLines];
     CTFrameGetLineOrigins(frame, CFRangeMake(0, numberOfLines), lineOrigins);
 
@@ -251,79 +256,73 @@
         CGPoint lineOrigin = lineOrigins[lineIndex];
         CGContextSetTextPosition(c, lineOrigin.x, lineOrigin.y);
         CTLineRef line = CFArrayGetValueAtIndex(lines, lineIndex);
-
-        if (lineIndex == numberOfLines - 1 && truncateLastLine) {
-            // Check if the range of text in the last line reaches the end of the full attributed string
-            CFRange lastLineRange = CTLineGetStringRange(line);
-
-            if (!(lastLineRange.length == 0 && lastLineRange.location == 0) && lastLineRange.location + lastLineRange.length < textRange.location + textRange.length) {
-                // Get correct truncationType and attribute position
-                CTLineTruncationType truncationType;
-                NSUInteger truncationAttributePosition = lastLineRange.location;
-                UILineBreakMode lineBreakMode = self.lineBreakMode;
-
-                // Multiple lines, only use UILineBreakModeTailTruncation
-                if (numberOfLines != 1) {
-                    lineBreakMode = UILineBreakModeTailTruncation;
-                }
-
-                switch (lineBreakMode) {
-                    case UILineBreakModeHeadTruncation:
-                        truncationType = kCTLineTruncationStart;
-                        break;
-                    case UILineBreakModeMiddleTruncation:
-                        truncationType = kCTLineTruncationMiddle;
-                        truncationAttributePosition += (lastLineRange.length / 2);
-                        break;
-                    case UILineBreakModeTailTruncation:
-                    default:
-                        truncationType = kCTLineTruncationEnd;
-                        truncationAttributePosition += (lastLineRange.length - 1);
-                        break;
-                }
-
-                // Get the attributes and use them to create the truncation token string
-                NSDictionary *tokenAttributes = [attributedString attributesAtIndex:truncationAttributePosition effectiveRange:NULL];
-                NSString *truncationTokenString = @"\u2026"; // Unicode Character
-                NSAttributedString *attributedTokenString = [[NSAttributedString alloc] initWithString:truncationTokenString attributes:tokenAttributes];
-                CTLineRef truncationToken = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)attributedTokenString);
-
-                NSMutableAttributedString *truncationString = [[attributedString attributedSubstringFromRange:NSMakeRange(lastLineRange.location, lastLineRange.length)] mutableCopy];
-                if (lastLineRange.length > 0) {
-                    unichar lastCharacter = [[truncationString string] characterAtIndex:lastLineRange.length - 1];
-                    if ([[NSCharacterSet newlineCharacterSet] characterIsMember:lastCharacter]) {
-                        [truncationString deleteCharactersInRange:NSMakeRange(lastLineRange.length - 1, 1)];
-                    }
-                }
-                [truncationString appendAttributedString:attributedTokenString];
-                CTLineRef truncationLine = CTLineCreateWithAttributedString((__bridge CFAttributedStringRef)truncationString);
-
-                // Truncate the line in case it is too long.
-                CTLineRef truncatedLine = CTLineCreateTruncatedLine(truncationLine, rect.size.width, truncationType, truncationToken);
-                if (!truncatedLine) {
-                    truncatedLine = CFRetain(truncationToken);
-                }
-
-                // Adjust pen offset for flush depending
-                CGFloat flushFactor = 0.0f;
-                CGFloat penOffset = CTLineGetPenOffsetForFlush(truncatedLine, flushFactor, rect.size.width);
-                CGContextSetTextPosition(c, penOffset, lineOrigin.y);
-                CTLineDraw(truncatedLine, c);
-
-                CFRelease(truncatedLine);
-                CFRelease(truncationLine);
-                CFRelease(truncationToken);
-            } else {
-                CTLineDraw(line, c);
-            }
-        } else {
-            CTLineDraw(line, c);
-        }
+        CTLineDraw(line, c);
     }
     CFRelease(frame);
     CFRelease(path);
 }
 
+- (void)drawBackground:(CTFrameRef)frame
+                inRect:(CGRect)rect
+               context:(CGContextRef)c
+{
+    NSArray *lines = (__bridge NSArray *)CTFrameGetLines(frame);
+    CGPoint origins[[lines count]];
+    CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
+    CFIndex lineIndex = 0;
+    for (id line in lines) {
+        CGFloat ascent = 0.0f, descent = 0.0f, leading = 0.0f;
+        CGFloat width = CTLineGetTypographicBounds((__bridge CTLineRef)line, &ascent, &descent, &leading) ;
+        CGRect lineBounds = CGRectMake(0.0f, 0.0f, width, ascent + descent + leading) ;
+        lineBounds.origin.x = origins[lineIndex].x;
+        lineBounds.origin.y = origins[lineIndex].y;
+
+        for (id glyphRun in (__bridge NSArray *)CTLineGetGlyphRuns((__bridge CTLineRef)line)) {
+            NSDictionary *attributes = (__bridge NSDictionary *)CTRunGetAttributes((__bridge CTRunRef) glyphRun);
+            CGColorRef strokeColor = [[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.25f] CGColor];
+            CGColorRef fillColor = [[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.1f] CGColor];
+            CGFloat cornerRadius = 5.0f;
+            CGFloat lineWidth = 1.0f;
+
+            if (strokeColor || fillColor) {
+                CGRect runBounds = CGRectZero;
+                CGFloat ascent = 0.0f;
+                CGFloat descent = 0.0f;
+
+                runBounds.size.width = CTRunGetTypographicBounds((__bridge CTRunRef)glyphRun, CFRangeMake(0, 0), &ascent, &descent, NULL);
+                runBounds.size.height = ascent + descent;
+
+                CGFloat xOffset = CTLineGetOffsetForStringIndex((__bridge CTLineRef)line, CTRunGetStringRange((__bridge CTRunRef)glyphRun).location, NULL);
+                runBounds.origin.x = origins[lineIndex].x + rect.origin.x + xOffset;
+                runBounds.origin.y = origins[lineIndex].y + rect.origin.y;
+                runBounds.origin.y -= descent;
+
+                // Don't draw higlightedLinkBackground too far to the right
+                if (CGRectGetWidth(runBounds) > CGRectGetWidth(lineBounds)) {
+                    runBounds.size.width = CGRectGetWidth(lineBounds);
+                }
+
+                CGPathRef path = [[UIBezierPath bezierPathWithRoundedRect:CGRectInset(CGRectInset(runBounds, -1.0f, -3.0f), lineWidth, lineWidth) cornerRadius:cornerRadius] CGPath];
+
+                CGContextSetLineJoin(c, kCGLineJoinRound);
+
+                if (fillColor) {
+                    CGContextSetFillColorWithColor(c, fillColor);
+                    CGContextAddPath(c, path);
+                    CGContextFillPath(c);
+                }
+
+                if (strokeColor) {
+                    CGContextSetStrokeColorWithColor(c, strokeColor);
+                    CGContextAddPath(c, path);
+                    CGContextStrokePath(c);
+                }
+            }
+        }
+
+        lineIndex++;
+    }
+}
 #pragma mark - IncludedLinkLabel
 
 - (void)setText:(id)text
@@ -351,7 +350,8 @@
 {
     NSMutableAttributedString *mutableAttributedString = nil;
     if ([text isKindOfClass:[NSString class]]) {
-    mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text attributes:[IncludedLinkLabelManager nsAttributedStringAttributesFromLabel:self]];
+        mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text
+                                                                         attributes:[IncludedLinkLabelManager nsAttributedStringAttributesFromLabel:self]];
     }
     if (block) {
         mutableAttributedString = block(mutableAttributedString);
@@ -371,13 +371,14 @@
         NSMutableAttributedString *mutableAttributedString = [_inactiveAttributedText mutableCopy];
         [mutableAttributedString addAttributes:self.activeLinkAttributes range:_activeLink.range];
         self.attributedText = mutableAttributedString;
-    } else if (_inactiveAttributedText) {
+        [self setNeedsDisplay];
+    }
+    else if (_inactiveAttributedText) {
         self.attributedText = _inactiveAttributedText;
         _inactiveAttributedText = nil;
-	    }
-    [self setNeedsDisplay];
+        [self setNeedsDisplay];
+    }
 }
-
 #pragma mark - UILabel
 
 - (CGRect)textRectForBounds:(CGRect)bounds
@@ -390,7 +391,11 @@
     CGRect textRect = bounds;
     textRect.size.height = fmaxf(self.font.pointSize * 2.0f, bounds.size.height);
 
-    CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter, CFRangeMake(0, [self.attributedText length]), NULL, textRect.size, NULL);
+    CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter,
+                                                                   CFRangeMake(0, [self.attributedText length]),
+                                                                   NULL,
+                                                                   textRect.size,
+                                                                   NULL);
     textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height));
 
     return textRect;
@@ -402,71 +407,63 @@
         [super drawTextInRect:rect];
         return;
     }
+    NSAttributedString *originalAttributedText;
 
-    CGContextRef c = UIGraphicsGetCurrentContext();
-    CGContextSetTextMatrix(c, CGAffineTransformIdentity);
-    CGContextTranslateCTM(c, 0.0f, rect.size.height);
-    CGContextScaleCTM(c, 1.0f, -1.0f);
+    if (self.adjustsFontSizeToFitWidth && self.numberOfLines > 0) {
+        // Adjust font size to fit width
+        CGFloat textWidth = [self sizeThatFits:CGSizeZero].width;
+        CGFloat availableWidth = self.frame.size.width * self.numberOfLines;
+        if (self.numberOfLines > 1 && self.lineBreakMode == UILineBreakModeWordWrap) {
+            textWidth *= (M_PI / M_E);
+        }
+
+        if (textWidth > availableWidth && textWidth > 0.0f) {
+            originalAttributedText = [self.attributedText copy];
+            self.text = [IncludedLinkLabelManager nsAttributedStringByScalingFontSize:self.attributedText
+                                                                                scale:availableWidth/textWidth
+                                                                      minimumFontSize:self.minimumFontSize];
+        }
+    }
+    CGContextRef contextRef = UIGraphicsGetCurrentContext();
+    CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
+    CGContextTranslateCTM(contextRef, 0.0f, rect.size.height);
+    CGContextScaleCTM(contextRef, 1.0f, -1.0f);
     CFRange textRange = CFRangeMake(0, [self.attributedText length]);
 
-    // First, get the text rect
+    // Get the text rect
     CGRect textRect = [self textRectForBounds:rect limitedToNumberOfLines:self.numberOfLines];
-    CGContextTranslateCTM(c, 0.0f, rect.size.height - textRect.origin.y - textRect.size.height);
+    CGContextTranslateCTM(contextRef, 0.0f, rect.size.height - textRect.origin.y - textRect.size.height);
 
-    [self drawFramesetter:self.framesetter attributedString:self.renderedAttributedText textRange:textRange inRect:textRect context:c];
-}
+    [self drawFramesetter:self.framesetter
+         attributedString:self.renderedAttributedText
+                textRange:textRange
+                   inRect:textRect
+                  context:contextRef];
 
-
-#pragma mark - UIResponder
-
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    UITouch *touch = [touches anyObject];
-
-    self.activeLink = [self linkAtPoint:[touch locationInView:self]];
-
-    if (!self.activeLink) {
-        [super touchesBegan:touches withEvent:event];
+    if (originalAttributedText) {
+        self.text = originalAttributedText;
     }
 }
+#pragma mark - UIGestureRecognizer
 
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    if (self.activeLink) {
-        UITouch *touch = [touches anyObject];
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    return [self linkAtPoint:[touch locationInView:self]] != nil;
+}
 
-        if (self.activeLink != [self linkAtPoint:[touch locationInView:self]]) {
-            self.activeLink = nil;
+- (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer {
+    if ([gestureRecognizer state] != UIGestureRecognizerStateEnded) {
+        return;
+    }
+
+    NSTextCheckingResult *result = [self linkAtPoint:[gestureRecognizer locationInView:self]];
+    if (!result || !self.delegate) {
+        return;
+    }
+
+    if (result.resultType == NSTextCheckingTypeLink) {
+        if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
+            [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
         }
-    } else {
-        [super touchesMoved:touches withEvent:event];
-    }
-}
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    if (self.activeLink) {
-        NSTextCheckingResult *result = self.activeLink;
-        self.activeLink = nil;
-
-        if(result.resultType == NSTextCheckingTypeLink) {
-            if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
-                [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
-                return;
-            }
-        }
-    }
-    else {
-        [super touchesEnded:touches withEvent:event];
-    }
-}
-
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    if (self.activeLink) {
-        self.activeLink = nil;
-    } else {
-        [super touchesCancelled:touches withEvent:event];
     }
 }
 

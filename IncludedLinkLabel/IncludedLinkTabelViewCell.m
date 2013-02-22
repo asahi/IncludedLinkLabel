@@ -22,6 +22,7 @@ static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
         self.descriptionLabel = [[IncludedLinkLabel alloc] initWithFrame:CGRectZero];
         self.descriptionLabel.font = [UIFont systemFontOfSize:kEspressoDescriptionTextFontSize];
         self.descriptionLabel.numberOfLines = 0;
+        self.descriptionLabel.lineBreakMode = UILineBreakModeWordWrap;
 
         [self.contentView addSubview:self.descriptionLabel];
     }
@@ -49,6 +50,9 @@ static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
 
 - (void)layoutSubviews {
     [super layoutSubviews];
+    self.textLabel.hidden = YES;
+    self.detailTextLabel.hidden = YES;
+
     _descriptionLabel.frame = CGRectOffset(CGRectInset(self.bounds, 20.0f, 5.0f), -10.0f, 0.0f);
 }
 

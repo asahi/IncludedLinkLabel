@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreText/CoreText.h>
 
 @class IncludedLinkLabel;
 
@@ -14,4 +15,5 @@
 + (NSRegularExpression *)urlRegularExpression;
 + (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label;
 + (NSAttributedString *)nsAttributedStringBySettingColorFromContext:(NSAttributedString *)attributedString color:(UIColor *)color;
++ (NSAttributedString *)nsAttributedStringByScalingFontSize:(NSAttributedString *)attributedString scale:(CGFloat)scale minimumFontSize:(CGFloat)minFontSize;
 @end
