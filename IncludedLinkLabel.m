@@ -10,7 +10,6 @@
 #import "IncludedLinkLabelManager.h"
 
 static NSString* const kBackgroundFillColorAttributeName = @"BackgroundFillColor";
-static NSString* const kBackgroundStrokeColorAttributeName = @"BackgroundStrokeColor";
 static NSString* const kBackgroundLineWidthAttributeName = @"BackgroundLineWidth";
 static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCornerRadius";
 
@@ -20,10 +19,10 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 @property (nonatomic, copy) NSAttributedString *inactiveAttributedText;
 @property (nonatomic, copy) NSAttributedString *renderedAttributedText;
 @property (nonatomic, assign) CTFramesetterRef framesetter;
-@property (nonatomic, assign) CTFramesetterRef highlightFramesetter;
 @property (nonatomic, strong) NSArray *links;
 @property (nonatomic, strong) NSTextCheckingResult *activeLink;
-@property (nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
+@property (nonatomic, strong) NSDictionary *linkAttributes;
+@property (nonatomic, strong) NSDictionary *activeLinkAttributes;
 @end
 
 @implementation IncludedLinkLabel {
@@ -55,26 +54,25 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     NSMutableDictionary *mutableLinkAttributes = [NSMutableDictionary dictionary];
     UIColor *linkColor = [UIColor colorWithRed:102.0/255 green:175.0/255 blue:204.0/255 alpha:1.0];
     [mutableLinkAttributes setObject:(id)[linkColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
+    
     self.linkAttributes = [NSDictionary dictionaryWithDictionary:mutableLinkAttributes];
 
     NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
-//    UIColor *activeColor = [UIColor colorWithRed:235.0/255 green:127.0/255 blue:94.0/255 alpha:1.0];
-//    [mutableActiveLinkAttributes setObject:(id)[activeColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
     [mutableActiveLinkAttributes setValue:(id)[[UIColor redColor] CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
+    [mutableActiveLinkAttributes setValue:(id)[[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.1f] CGColor] forKey:(NSString *)kBackgroundFillColorAttributeName];    
     [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:1.0f] forKey:(NSString *)kBackgroundLineWidthAttributeName];
     [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:5.0f] forKey:(NSString *)kBackgroundCornerRadiusAttributeName];
 
     self.activeLinkAttributes = [NSDictionary dictionaryWithDictionary:mutableActiveLinkAttributes];
 
-    self.tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-    [self.tapGestureRecognizer setDelegate:self];
-    [self addGestureRecognizer:self.tapGestureRecognizer];
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    tapGestureRecognizer.delegate = self;
+    [self addGestureRecognizer:tapGestureRecognizer];
 }
 
 - (void)dealloc
 {
     if (_framesetter) CFRelease(_framesetter);
-    if (_highlightFramesetter) CFRelease(_highlightFramesetter);
 }
 
 #pragma mark -
@@ -99,10 +97,8 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     if (_needsFramesetter) {
         @synchronized(self) {
             if (_framesetter) CFRelease(_framesetter);
-            if (_highlightFramesetter) CFRelease(_highlightFramesetter);
 
             self.framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)self.renderedAttributedText);
-            self.highlightFramesetter = nil;
             _needsFramesetter = NO;
         }
     }
@@ -133,19 +129,10 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     }
 }
 
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result attributes:(NSDictionary *)attributes
-{
-    [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:attributes];
-}
-
-- (void)addLinkWithTextCheckingResult:(NSTextCheckingResult *)result
-{
-    [self addLinkWithTextCheckingResult:result attributes:self.linkAttributes];
-}
-
 - (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range
 {
-    [self addLinkWithTextCheckingResult:[NSTextCheckingResult linkCheckingResultWithRange:range URL:url]];
+    NSTextCheckingResult *result = [NSTextCheckingResult linkCheckingResultWithRange:range URL:url];
+    [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:self.linkAttributes];
 }
 
 #pragma mark -
@@ -153,9 +140,7 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 - (NSTextCheckingResult *)linkAtCharacterIndex:(CFIndex)idx
 {
     for (NSTextCheckingResult *result in self.links) {
-//      if (NSLocationInRange((NSUInteger)idx, result.range)) {
-        NSRange range = result.range;
-        if ((CFIndex)range.location <= idx && idx <= (CFIndex)(range.location + range.length - 1)) {
+        if (NSLocationInRange((NSUInteger)idx, result.range)) {
             return result;
         }
     }
@@ -279,12 +264,11 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
         for (id glyphRun in (__bridge NSArray *)CTLineGetGlyphRuns((__bridge CTLineRef)line)) {
             NSDictionary *attributes = (__bridge NSDictionary *)CTRunGetAttributes((__bridge CTRunRef) glyphRun);
-            CGColorRef strokeColor = [[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.25f] CGColor];
-            CGColorRef fillColor = [[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.1f] CGColor];
-            CGFloat cornerRadius = 5.0f;
-            CGFloat lineWidth = 1.0f;
+            CGColorRef fillColor = (__bridge CGColorRef)[attributes objectForKey:kBackgroundFillColorAttributeName];
+            CGFloat cornerRadius = [[attributes objectForKey:kBackgroundCornerRadiusAttributeName] floatValue];
+            CGFloat lineWidth = [[attributes objectForKey:kBackgroundLineWidthAttributeName] floatValue];
 
-            if (strokeColor || fillColor) {
+            if (fillColor) {
                 CGRect runBounds = CGRectZero;
                 CGFloat ascent = 0.0f;
                 CGFloat descent = 0.0f;
@@ -297,26 +281,11 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
                 runBounds.origin.y = origins[lineIndex].y + rect.origin.y;
                 runBounds.origin.y -= descent;
 
-                // Don't draw higlightedLinkBackground too far to the right
-                if (CGRectGetWidth(runBounds) > CGRectGetWidth(lineBounds)) {
-                    runBounds.size.width = CGRectGetWidth(lineBounds);
-                }
-
                 CGPathRef path = [[UIBezierPath bezierPathWithRoundedRect:CGRectInset(CGRectInset(runBounds, -1.0f, -3.0f), lineWidth, lineWidth) cornerRadius:cornerRadius] CGPath];
-
                 CGContextSetLineJoin(c, kCGLineJoinRound);
-
-                if (fillColor) {
-                    CGContextSetFillColorWithColor(c, fillColor);
-                    CGContextAddPath(c, path);
-                    CGContextFillPath(c);
-                }
-
-                if (strokeColor) {
-                    CGContextSetStrokeColorWithColor(c, strokeColor);
-                    CGContextAddPath(c, path);
-                    CGContextStrokePath(c);
-                }
+                CGContextSetFillColorWithColor(c, fillColor);
+                CGContextAddPath(c, path);
+                CGContextFillPath(c);
             }
         }
 
@@ -364,18 +333,19 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     _activeLink = activeLink;
 
     if (_activeLink && [self.activeLinkAttributes count] > 0) {
-        if (!_inactiveAttributedText) {
-            _inactiveAttributedText = [self.attributedText copy];
+        if (!self.inactiveAttributedText) {
+            self.inactiveAttributedText = [self.attributedText copy];
         }
 
-        NSMutableAttributedString *mutableAttributedString = [_inactiveAttributedText mutableCopy];
+        NSMutableAttributedString *mutableAttributedString = [self.inactiveAttributedText mutableCopy];
         [mutableAttributedString addAttributes:self.activeLinkAttributes range:_activeLink.range];
         self.attributedText = mutableAttributedString;
+
         [self setNeedsDisplay];
-    }
-    else if (_inactiveAttributedText) {
-        self.attributedText = _inactiveAttributedText;
-        _inactiveAttributedText = nil;
+    } else if (self.inactiveAttributedText) {
+        self.attributedText = self.inactiveAttributedText;
+        self.inactiveAttributedText = nil;
+
         [self setNeedsDisplay];
     }
 }
@@ -408,22 +378,6 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         return;
     }
     NSAttributedString *originalAttributedText;
-
-    if (self.adjustsFontSizeToFitWidth && self.numberOfLines > 0) {
-        // Adjust font size to fit width
-        CGFloat textWidth = [self sizeThatFits:CGSizeZero].width;
-        CGFloat availableWidth = self.frame.size.width * self.numberOfLines;
-        if (self.numberOfLines > 1 && self.lineBreakMode == UILineBreakModeWordWrap) {
-            textWidth *= (M_PI / M_E);
-        }
-
-        if (textWidth > availableWidth && textWidth > 0.0f) {
-            originalAttributedText = [self.attributedText copy];
-            self.text = [IncludedLinkLabelManager nsAttributedStringByScalingFontSize:self.attributedText
-                                                                                scale:availableWidth/textWidth
-                                                                      minimumFontSize:self.minimumFontSize];
-        }
-    }
     CGContextRef contextRef = UIGraphicsGetCurrentContext();
     CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
     CGContextTranslateCTM(contextRef, 0.0f, rect.size.height);
@@ -447,7 +401,8 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 #pragma mark - UIGestureRecognizer
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
-    return [self linkAtPoint:[touch locationInView:self]] != nil;
+    self.activeLink = [self linkAtPoint:[touch locationInView:self]];
+    return (self.activeLink != nil);
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer {
@@ -455,14 +410,14 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         return;
     }
 
-    NSTextCheckingResult *result = [self linkAtPoint:[gestureRecognizer locationInView:self]];
-    if (!result || !self.delegate) {
-        return;
-    }
+    if (self.activeLink) {
+        NSTextCheckingResult *result = self.activeLink;
+        self.activeLink = nil;
 
-    if (result.resultType == NSTextCheckingTypeLink) {
-        if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
-            [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
+        if (result.resultType == NSTextCheckingTypeLink) {
+            if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
+                [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
+            }
         }
     }
 }

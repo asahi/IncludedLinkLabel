@@ -10,8 +10,8 @@
 #import "IncludedLinkTabelViewCell.h"
 #import "IncludedLinkLabel.h"
 
-static CGFloat const kEspressoDescriptionTextFontSize = 14;
-static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
+static CGFloat const kDescriptionTextFontSize = 14;
+static CGFloat const kAttributedCellVerticalMargin = 10.0f;
 
 @implementation IncludedLinkTabelViewCell
 
@@ -19,8 +19,10 @@ static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
+        [self setSelectionStyle: UITableViewCellSelectionStyleNone];
+
         self.descriptionLabel = [[IncludedLinkLabel alloc] initWithFrame:CGRectZero];
-        self.descriptionLabel.font = [UIFont systemFontOfSize:kEspressoDescriptionTextFontSize];
+        self.descriptionLabel.font = [UIFont systemFontOfSize:kDescriptionTextFontSize];
         self.descriptionLabel.numberOfLines = 0;
         self.descriptionLabel.lineBreakMode = UILineBreakModeWordWrap;
 
@@ -41,8 +43,8 @@ static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
 
 + (CGFloat)heightForCellWithText:(NSString *)text {
     CGFloat height = 10.0f;
-    height += ceilf([text sizeWithFont:[UIFont systemFontOfSize:kEspressoDescriptionTextFontSize] constrainedToSize:CGSizeMake(270.0f, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap].height);
-    height += kAttributedTableViewCellVerticalMargin;
+    height += ceilf([text sizeWithFont:[UIFont systemFontOfSize:kDescriptionTextFontSize] constrainedToSize:CGSizeMake(270.0f, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap].height);
+    height += kAttributedCellVerticalMargin;
     return height;
 }
 
@@ -50,10 +52,7 @@ static CGFloat const kAttributedTableViewCellVerticalMargin = 10.0f;
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    self.textLabel.hidden = YES;
-    self.detailTextLabel.hidden = YES;
-
-    _descriptionLabel.frame = CGRectOffset(CGRectInset(self.bounds, 20.0f, 5.0f), -10.0f, 0.0f);
+    _descriptionLabel.frame = CGRectOffset(CGRectInset(self.bounds, 20.0f, 5.0f), -5.0f, 5.0f);
 }
 
 
