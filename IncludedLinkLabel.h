@@ -13,13 +13,10 @@
 
 @interface IncludedLinkLabel : UILabel <UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
-@property (nonatomic, strong) NSDictionary *linkAttributes;
-@property (nonatomic, strong) NSDictionary *activeLinkAttributes;
 
 - (void)setText:(id)text;
 - (void)setText:(id)text attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;
 - (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range;
-
 @end
 
 

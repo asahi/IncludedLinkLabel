@@ -7,19 +7,18 @@
 //
 
 #import "IncludedLinkLabelManager.h"
-#import "IncludedLinkLabel.h"
 
 
 @implementation IncludedLinkLabelManager
 
-+ (NSRegularExpression *)urlRegularExpression {
++ (NSRegularExpression *)urlRegularExpression
+{
     NSString *urlRegularPattern = @"http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?";
     NSRegularExpression *urlRegularExpression = [[NSRegularExpression alloc] initWithPattern:urlRegularPattern options:NSRegularExpressionCaseInsensitive error:NULL];
     return urlRegularExpression;
 }
 
-
-+ (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label
++ (NSDictionary *)nsAttributedStringAttributesFromLabel:(UILabel *)label
 {
     NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];
 
@@ -29,23 +28,10 @@
 
     [mutableAttributes setObject:(id)[label.textColor CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
 
-    CGFloat lineSpacingAdjustment = ceilf(label.font.lineHeight - label.font.ascender + label.font.descender);
-    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
-
-    CTParagraphStyleSetting paragraphStyles[2] = {
-        {.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
-        {.spec = kCTParagraphStyleSpecifierLineSpacingAdjustment, .valueSize = sizeof (CGFloat), .value = (const void *)&lineSpacingAdjustment},
-    };
-
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 2);
-    [mutableAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
-    CFRelease(paragraphStyle);
-    
     return [NSDictionary dictionaryWithDictionary:mutableAttributes];
 }
 
-
-+ (NSAttributedString *) nsAttributedStringBySettingColorFromContext:(NSAttributedString *)attributedString color:(UIColor *)color
++ (NSAttributedString *)nsAttributedStringBySettingColorFromContext:(NSAttributedString *)attributedString color:(UIColor *)color
 {
     if (!color)
         return attributedString;
@@ -64,23 +50,5 @@
     return mutableAttributedString;
 }
 
-
-+ (NSAttributedString *) nsAttributedStringByScalingFontSize:(NSAttributedString *)attributedString scale:(CGFloat)scale minimumFontSize:(CGFloat)minFontSize {
-    NSMutableAttributedString *mutableAttributedString = [attributedString mutableCopy];
-    [mutableAttributedString enumerateAttribute:(NSString *)kCTFontAttributeName
-                                        inRange:NSMakeRange(0, [mutableAttributedString length])
-                                        options:0
-                                     usingBlock:^(id value, NSRange range, BOOL *stop) {
-                                         CTFontRef font = (__bridge CTFontRef)value;
-                                         if (font) {
-                                             CGFloat scaledFontSize = floorf(CTFontGetSize(font) * scale);
-                                             CTFontRef scaledFont = CTFontCreateCopyWithAttributes(font, fmaxf(scaledFontSize, minFontSize), NULL, NULL);
-                                             CFAttributedStringSetAttribute((CFMutableAttributedStringRef)mutableAttributedString, CFRangeMake(range.location, range.length), kCTFontAttributeName, scaledFont);
-            CFRelease(scaledFont);
-        }
-    }];
-
-    return mutableAttributedString;
-}
 
 @end

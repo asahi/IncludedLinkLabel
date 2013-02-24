@@ -1,4 +1,4 @@
-Not link test : This contents is not included link URL in the string
 baseurlhttp://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 Scientific Linux 6｜カスタムOSインストールガイド http://support.sakura.ad.jp
 ソーシャル・ネットワーキング サービス [mixi(ミクシィ)]　http://mixi.jp 鄭基旭 が IOS-1445 を更新しました :鄭 基旭 が IOS-1445 を更新しました :新機能紹介にアプリ紹介キャンペーンの案内を追加する新機能紹介にアプリ紹介キャンペーンの案内を追加する新機能紹介にアプリ紹介キャンペーンの案内を追加する新機能紹介にアプリ紹介キャンペーンの案内を追加する
+Not link test : This contents is not included link URL in the string
