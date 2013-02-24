@@ -400,12 +400,14 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 }
 #pragma mark - UIGestureRecognizer
 
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
     self.activeLink = [self linkAtPoint:[touch locationInView:self]];
     return (self.activeLink != nil);
 }
 
-- (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer {
+- (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer
+{
     if ([gestureRecognizer state] != UIGestureRecognizerStateEnded) {
         return;
     }
