@@ -424,5 +424,4 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     }
 }
 
-
 @end
