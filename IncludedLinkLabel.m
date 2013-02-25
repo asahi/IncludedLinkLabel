@@ -351,24 +351,12 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 }
 #pragma mark - UILabel
 
-- (CGRect)textRectForBounds:(CGRect)bounds
-     limitedToNumberOfLines:(NSInteger)numberOfLines
+- (CGRect)textRectForBounds:(CGRect)bounds limitedToNumberOfLines:(NSInteger)numberOfLines
 {
     if (!self.attributedText) {
         return [super textRectForBounds:bounds limitedToNumberOfLines:numberOfLines];
     }
-
-    CGRect textRect = bounds;
-    textRect.size.height = fmaxf(self.font.pointSize * 2.0f, bounds.size.height);
-
-    CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter,
-                                                                   CFRangeMake(0, [self.attributedText length]),
-                                                                   NULL,
-                                                                   textRect.size,
-                                                                   NULL);
-    textSize = CGSizeMake(ceilf(textSize.width), ceilf(textSize.height));
-
-    return textRect;
+    return bounds;
 }
 
 - (void)drawTextInRect:(CGRect)rect
@@ -403,6 +391,28 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
     self.activeLink = [self linkAtPoint:[touch locationInView:self]];
+    return (self.activeLink != nil);
+}
+
+- (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer
+{
+    if ([gestureRecognizer state] != UIGestureRecognizerStateEnded) {
+        return;
+    }
+
+    if (self.activeLink) {
+        NSTextCheckingResult *result = self.activeLink;
+        self.activeLink = nil;
+
+        if (result.resultType == NSTextCheckingTypeLink) {
+            if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
+                [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
+            }
+        }
+    }
+}
+
+@endocationInView:self]];
     return (self.activeLink != nil);
 }
 

@@ -52,7 +52,7 @@ static CGFloat const kAttributedCellVerticalMargin = 10.0f;
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    _descriptionLabel.frame = CGRectOffset(CGRectInset(self.bounds, 20.0f, 5.0f), -5.0f, 5.0f);
+    _descriptionLabel.frame = CGRectOffset(CGRectInset(self.bounds, 20.0f, 5.0f), -10.0f, 0.0f);
 }
 
 
