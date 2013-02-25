@@ -7,7 +7,7 @@
 //
 
 #import "IncludedLinkLabelManager.h"
-
+#import "IncludedLinkLabel.h"
 
 @implementation IncludedLinkLabelManager
 
@@ -18,7 +18,7 @@
     return urlRegularExpression;
 }
 
-+ (NSDictionary *)nsAttributedStringAttributesFromLabel:(UILabel *)label
++ (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label
 {
     NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];
 

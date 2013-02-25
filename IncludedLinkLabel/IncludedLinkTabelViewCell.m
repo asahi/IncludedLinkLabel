@@ -10,7 +10,7 @@
 #import "IncludedLinkTabelViewCell.h"
 #import "IncludedLinkLabel.h"
 
-static CGFloat const kDescriptionTextFontSize = 14;
+static CGFloat const kDescriptionTextFontSize = 15;
 static CGFloat const kAttributedCellVerticalMargin = 10.0f;
 
 @implementation IncludedLinkTabelViewCell
@@ -24,7 +24,7 @@ static CGFloat const kAttributedCellVerticalMargin = 10.0f;
         self.descriptionLabel = [[IncludedLinkLabel alloc] initWithFrame:CGRectZero];
         self.descriptionLabel.font = [UIFont systemFontOfSize:kDescriptionTextFontSize];
         self.descriptionLabel.numberOfLines = 0;
-        self.descriptionLabel.lineBreakMode = UILineBreakModeWordWrap;
+        self.descriptionLabel.lineBreakMode = UILineBreakModeCharacterWrap;
 
         [self.contentView addSubview:self.descriptionLabel];
     }
@@ -43,7 +43,7 @@ static CGFloat const kAttributedCellVerticalMargin = 10.0f;
 
 + (CGFloat)heightForCellWithText:(NSString *)text {
     CGFloat height = 10.0f;
-    height += ceilf([text sizeWithFont:[UIFont systemFontOfSize:kDescriptionTextFontSize] constrainedToSize:CGSizeMake(270.0f, CGFLOAT_MAX) lineBreakMode:UILineBreakModeWordWrap].height);
+    height += ceilf([text sizeWithFont:[UIFont systemFontOfSize:kDescriptionTextFontSize] constrainedToSize:CGSizeMake(270.0f, CGFLOAT_MAX) lineBreakMode:UILineBreakModeCharacterWrap].height);
     height += kAttributedCellVerticalMargin;
     return height;
 }

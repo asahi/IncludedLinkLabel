@@ -51,10 +51,26 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
     self.links = [NSArray array];
 
+    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
+    CGFloat minLineHeight = 14.0f;
+    CGFloat maxLineHeight = 14.0f;
+    CGFloat minLineSpacing = 4.0f;
+    CGFloat maxLineSpacing = 4.0f;    
+
+    CTParagraphStyleSetting paragraphStyles[5] = {
+		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
+        {.spec = kCTParagraphStyleSpecifierMinimumLineHeight, .valueSize = sizeof(CGFloat), .value = &minLineHeight},
+        {.spec = kCTParagraphStyleSpecifierMaximumLineHeight, .valueSize = sizeof(CGFloat), .value = &maxLineHeight},
+        {.spec = kCTParagraphStyleSpecifierMinimumLineSpacing, .valueSize = sizeof(CGFloat), .value = &minLineSpacing},
+        {.spec = kCTParagraphStyleSpecifierMaximumLineSpacing, .valueSize = sizeof(CGFloat), .value = &maxLineSpacing},
+	};
+    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 5);
+
     NSMutableDictionary *mutableLinkAttributes = [NSMutableDictionary dictionary];
     UIColor *linkColor = [UIColor colorWithRed:102.0/255 green:175.0/255 blue:204.0/255 alpha:1.0];
     [mutableLinkAttributes setObject:(id)[linkColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
-    
+    [mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
+
     self.linkAttributes = [NSDictionary dictionaryWithDictionary:mutableLinkAttributes];
 
     NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
@@ -62,8 +78,11 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     [mutableActiveLinkAttributes setValue:(id)[[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.1f] CGColor] forKey:(NSString *)kBackgroundFillColorAttributeName];    
     [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:1.0f] forKey:(NSString *)kBackgroundLineWidthAttributeName];
     [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:5.0f] forKey:(NSString *)kBackgroundCornerRadiusAttributeName];
+    [mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
 
     self.activeLinkAttributes = [NSDictionary dictionaryWithDictionary:mutableActiveLinkAttributes];
+
+    CFRelease(paragraphStyle);
 
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     tapGestureRecognizer.delegate = self;
@@ -365,7 +384,6 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         [super drawTextInRect:rect];
         return;
     }
-    NSAttributedString *originalAttributedText;
     CGContextRef contextRef = UIGraphicsGetCurrentContext();
     CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
     CGContextTranslateCTM(contextRef, 0.0f, rect.size.height);
@@ -381,38 +399,12 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
                 textRange:textRange
                    inRect:textRect
                   context:contextRef];
-
-    if (originalAttributedText) {
-        self.text = originalAttributedText;
-    }
 }
 #pragma mark - UIGestureRecognizer
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
     self.activeLink = [self linkAtPoint:[touch locationInView:self]];
-    return (self.activeLink != nil);
-}
-
-- (void)handleTap:(UITapGestureRecognizer *)gestureRecognizer
-{
-    if ([gestureRecognizer state] != UIGestureRecognizerStateEnded) {
-        return;
-    }
-
-    if (self.activeLink) {
-        NSTextCheckingResult *result = self.activeLink;
-        self.activeLink = nil;
-
-        if (result.resultType == NSTextCheckingTypeLink) {
-            if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
-                [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
-            }
-        }
-    }
-}
-
-@endocationInView:self]];
     return (self.activeLink != nil);
 }
 
