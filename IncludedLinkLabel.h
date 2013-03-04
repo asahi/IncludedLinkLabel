@@ -13,6 +13,7 @@
 
 @interface IncludedLinkLabel : UILabel <UIGestureRecognizerDelegate>
 @property (nonatomic, unsafe_unretained) id <IncludedLinkLabelDelegate> delegate;
+@property (nonatomic, assign) BOOL isTouched;
 
 - (void)setText:(id)text;
 - (void)setText:(id)text attributesWithBlock:(NSMutableAttributedString *(^)(NSMutableAttributedString *mutableAttributedString))block;

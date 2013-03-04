@@ -7,18 +7,20 @@
 //
 
 #import "IncludedLinkLabelManager.h"
-#import "IncludedLinkLabel.h"
+
+static CGFloat const kLineHeight = 14.0f;
+static CGFloat const kLineSpacing = 4.0f;
+static NSString *const kUrlRegularPattern = @"\\b((?:[a-z][\\w-]+:(?:/{1,3}|[a-z0-9%])|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\)|[^\\s`!()\\[\\]{};:'\".,<>?«»“”‘’]))";
 
 @implementation IncludedLinkLabelManager
 
 + (NSRegularExpression *)urlRegularExpression
 {
-    NSString *urlRegularPattern = @"http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?";
-    NSRegularExpression *urlRegularExpression = [[NSRegularExpression alloc] initWithPattern:urlRegularPattern options:NSRegularExpressionCaseInsensitive error:NULL];
+    NSRegularExpression *urlRegularExpression = [[NSRegularExpression alloc] initWithPattern:kUrlRegularPattern options:NSRegularExpressionCaseInsensitive error:NULL];
     return urlRegularExpression;
 }
 
-+ (NSDictionary *)nsAttributedStringAttributesFromLabel:(IncludedLinkLabel *)label
++ (NSDictionary *)nsAttributedStringAttributesFromLabel:(UILabel *)label
 {
     NSMutableDictionary *mutableAttributes = [NSMutableDictionary dictionary];
 
@@ -27,6 +29,23 @@
     CFRelease(font);
 
     [mutableAttributes setObject:(id)[label.textColor CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
+
+    CTLineBreakMode lineBreakMode = kCTLineBreakByCharWrapping;
+    CGFloat minLineHeight = kLineHeight;
+    CGFloat maxLineHeight = minLineHeight;
+    CGFloat minLineSpacing = kLineSpacing;
+    CGFloat maxLineSpacing = minLineSpacing;
+
+    CTParagraphStyleSetting paragraphStyles[5] = {
+		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
+        {.spec = kCTParagraphStyleSpecifierMinimumLineHeight,   .valueSize = sizeof(CGFloat),   .value = &minLineHeight},
+        {.spec = kCTParagraphStyleSpecifierMaximumLineHeight,   .valueSize = sizeof(CGFloat),   .value = &maxLineHeight},
+        {.spec = kCTParagraphStyleSpecifierMinimumLineSpacing,  .valueSize = sizeof(CGFloat),   .value = &minLineSpacing},
+        {.spec = kCTParagraphStyleSpecifierMaximumLineSpacing,  .valueSize = sizeof(CGFloat),   .value = &maxLineSpacing},
+	};
+    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 5);
+	[mutableAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
+	CFRelease(paragraphStyle);
 
     return [NSDictionary dictionaryWithDictionary:mutableAttributes];
 }
@@ -49,6 +68,5 @@
 
     return mutableAttributedString;
 }
-
 
 @end

@@ -30,7 +30,6 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     BOOL _needsFramesetter;
 }
 
-
 @synthesize attributedText = _attributedText;
 
 - (id)initWithFrame:(CGRect)frame
@@ -51,42 +50,27 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
     self.links = [NSArray array];
 
-    CTLineBreakMode lineBreakMode = kCTLineBreakByWordWrapping;
-    CGFloat minLineHeight = 14.0f;
-    CGFloat maxLineHeight = 14.0f;
-    CGFloat minLineSpacing = 4.0f;
-    CGFloat maxLineSpacing = 4.0f;    
-
-    CTParagraphStyleSetting paragraphStyles[5] = {
-		{.spec = kCTParagraphStyleSpecifierLineBreakMode, .valueSize = sizeof(CTLineBreakMode), .value = (const void *)&lineBreakMode},
-        {.spec = kCTParagraphStyleSpecifierMinimumLineHeight, .valueSize = sizeof(CGFloat), .value = &minLineHeight},
-        {.spec = kCTParagraphStyleSpecifierMaximumLineHeight, .valueSize = sizeof(CGFloat), .value = &maxLineHeight},
-        {.spec = kCTParagraphStyleSpecifierMinimumLineSpacing, .valueSize = sizeof(CGFloat), .value = &minLineSpacing},
-        {.spec = kCTParagraphStyleSpecifierMaximumLineSpacing, .valueSize = sizeof(CGFloat), .value = &maxLineSpacing},
-	};
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(paragraphStyles, 5);
-
     NSMutableDictionary *mutableLinkAttributes = [NSMutableDictionary dictionary];
     UIColor *linkColor = [UIColor colorWithRed:102.0/255 green:175.0/255 blue:204.0/255 alpha:1.0];
     [mutableLinkAttributes setObject:(id)[linkColor CGColor] forKey:(NSString*)kCTForegroundColorAttributeName];
-    [mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
-
+    
     self.linkAttributes = [NSDictionary dictionaryWithDictionary:mutableLinkAttributes];
 
     NSMutableDictionary *mutableActiveLinkAttributes = [NSMutableDictionary dictionary];
-    [mutableActiveLinkAttributes setValue:(id)[[UIColor redColor] CGColor] forKey:(NSString *)kCTForegroundColorAttributeName];
     [mutableActiveLinkAttributes setValue:(id)[[UIColor colorWithRed:1.0f green:0.0f blue:0.0f alpha:0.1f] CGColor] forKey:(NSString *)kBackgroundFillColorAttributeName];    
-    [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:1.0f] forKey:(NSString *)kBackgroundLineWidthAttributeName];
+    [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:-1.0f] forKey:(NSString *)kBackgroundLineWidthAttributeName];
     [mutableActiveLinkAttributes setValue:(id)[NSNumber numberWithFloat:5.0f] forKey:(NSString *)kBackgroundCornerRadiusAttributeName];
-    [mutableLinkAttributes setObject:(__bridge id)paragraphStyle forKey:(NSString *)kCTParagraphStyleAttributeName];
 
     self.activeLinkAttributes = [NSDictionary dictionaryWithDictionary:mutableActiveLinkAttributes];
 
-    CFRelease(paragraphStyle);
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    tapGesture.delegate = self;
+    [self addGestureRecognizer:tapGesture];
 
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-    tapGestureRecognizer.delegate = self;
-    [self addGestureRecognizer:tapGestureRecognizer];
+    UIPanGestureRecognizer *panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    [panGesture setMaximumNumberOfTouches:1];
+    [panGesture setDelegate:self];
+    [self addGestureRecognizer:panGesture];
 }
 
 - (void)dealloc
@@ -150,8 +134,13 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
 - (void)addLinkToURL:(NSURL *)url withRange:(NSRange)range
 {
-    NSTextCheckingResult *result = [NSTextCheckingResult linkCheckingResultWithRange:range URL:url];
-    [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:self.linkAttributes];
+    if ([url.description hasPrefix:@"www"]) {
+        url = [NSURL URLWithString:[NSString stringWithFormat:@"http://%@", url.description]];
+    }
+    if ([[UIApplication sharedApplication] canOpenURL:url]) {
+        NSTextCheckingResult *result = [NSTextCheckingResult linkCheckingResultWithRange:range URL:url];
+        [self addLinksWithTextCheckingResults:[NSArray arrayWithObject:result] attributes:self.linkAttributes];
+    }
 }
 
 #pragma mark -
@@ -212,8 +201,8 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         CGPoint lineOrigin = lineOrigins[lineIndex];
         CTLineRef line = CFArrayGetValueAtIndex(lines, lineIndex);
 
-        // lineのbounding情報を取得
-        CGFloat ascent = 0.0f, descent = 0.0f, leading = 0.0f;
+        // lineのbounding情報
+        CGFloat ascent = 0.5f, descent = 0.5f, leading = 0.0f;
         CGFloat width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
         CGFloat yMin = floor(lineOrigin.y - descent);
         CGFloat yMax = ceil(lineOrigin.y + ascent);
@@ -274,6 +263,9 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
     CGPoint origins[[lines count]];
     CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins);
     CFIndex lineIndex = 0;
+    CGFloat yOffset = 0.0f;
+    yOffset -= [self textRectForBounds:self.bounds limitedToNumberOfLines:self.numberOfLines].origin.y;
+
     for (id line in lines) {
         CGFloat ascent = 0.0f, descent = 0.0f, leading = 0.0f;
         CGFloat width = CTLineGetTypographicBounds((__bridge CTLineRef)line, &ascent, &descent, &leading) ;
@@ -297,10 +289,10 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
                 CGFloat xOffset = CTLineGetOffsetForStringIndex((__bridge CTLineRef)line, CTRunGetStringRange((__bridge CTRunRef)glyphRun).location, NULL);
                 runBounds.origin.x = origins[lineIndex].x + rect.origin.x + xOffset;
-                runBounds.origin.y = origins[lineIndex].y + rect.origin.y;
+                runBounds.origin.y = origins[lineIndex].y + rect.origin.y + yOffset;
                 runBounds.origin.y -= descent;
 
-                CGPathRef path = [[UIBezierPath bezierPathWithRoundedRect:CGRectInset(CGRectInset(runBounds, -1.0f, -3.0f), lineWidth, lineWidth) cornerRadius:cornerRadius] CGPath];
+                CGPathRef path = [[UIBezierPath bezierPathWithRoundedRect:CGRectInset(CGRectInset(runBounds, -1.0f, -1.0f), lineWidth, lineWidth) cornerRadius:cornerRadius] CGPath];
                 CGContextSetLineJoin(c, kCGLineJoinRound);
                 CGContextSetFillColorWithColor(c, fillColor);
                 CGContextAddPath(c, path);
@@ -315,8 +307,10 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
 - (void)setText:(id)text
 {
+    if (!text) return;
+
     if ([text isKindOfClass:[NSString class]]) {
-        [self setText:text attributesWithBlock:nil];
+        [self setText:[text stringByReplacingOccurrencesOfString:@"\r\n" withString:@""] attributesWithBlock:nil];
         return;
     }
     self.attributedText = text;
@@ -341,6 +335,7 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         mutableAttributedString = [[NSMutableAttributedString alloc] initWithString:text
                                                                          attributes:[IncludedLinkLabelManager nsAttributedStringAttributesFromLabel:self]];
     }
+
     if (block) {
         mutableAttributedString = block(mutableAttributedString);
     }
@@ -355,27 +350,36 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
         if (!self.inactiveAttributedText) {
             self.inactiveAttributedText = [self.attributedText copy];
         }
-
         NSMutableAttributedString *mutableAttributedString = [self.inactiveAttributedText mutableCopy];
         [mutableAttributedString addAttributes:self.activeLinkAttributes range:_activeLink.range];
         self.attributedText = mutableAttributedString;
-
-        [self setNeedsDisplay];
-    } else if (self.inactiveAttributedText) {
+    }
+    else if (self.inactiveAttributedText) {
         self.attributedText = self.inactiveAttributedText;
         self.inactiveAttributedText = nil;
-
-        [self setNeedsDisplay];
     }
+    [self setNeedsDisplay];
 }
-#pragma mark - UILabel
 
+
+#pragma mark - UILabel
+// ⬇　Adjust the text to Center vertically　(ただし、絵文字が含まれている場合はうまくコントロールできない)
+// CGFloat yOffset = floorf((bounds.size.height - textSize.height) / 2.0f);
 - (CGRect)textRectForBounds:(CGRect)bounds limitedToNumberOfLines:(NSInteger)numberOfLines
 {
     if (!self.attributedText) {
         return [super textRectForBounds:bounds limitedToNumberOfLines:numberOfLines];
     }
-    return bounds;
+    CGRect textRect = bounds;
+    textRect.size.height = fmaxf(self.font.pointSize * 2.0f, bounds.size.height);
+
+    CGSize textSize = CTFramesetterSuggestFrameSizeWithConstraints(self.framesetter, CFRangeMake(0, [self.attributedText length]), NULL, textRect.size, NULL);
+    // Adjust the text to Bottom vertically
+    if (textSize.height < textRect.size.height) {
+        CGFloat yOffset = bounds.size.height - textSize.height;
+        textRect.origin.y += yOffset;
+    }
+    return textRect;
 }
 
 - (void)drawTextInRect:(CGRect)rect
@@ -399,12 +403,16 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
                 textRange:textRange
                    inRect:textRect
                   context:contextRef];
+
 }
 #pragma mark - UIGestureRecognizer
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
-    self.activeLink = [self linkAtPoint:[touch locationInView:self]];
+    NSTextCheckingResult *linkResult = [self linkAtPoint:[touch locationInView:self]];
+    if (linkResult) {
+        [self setActiveLink:linkResult];
+    }
     return (self.activeLink != nil);
 }
 
@@ -416,13 +424,19 @@ static NSString* const kBackgroundCornerRadiusAttributeName = @"BackgroundCorner
 
     if (self.activeLink) {
         NSTextCheckingResult *result = self.activeLink;
-        self.activeLink = nil;
+        [self setActiveLink:nil];
 
         if (result.resultType == NSTextCheckingTypeLink) {
             if ([self.delegate respondsToSelector:@selector(includedLinkLabel:didSelectLinkWithURL:)]) {
                 [self.delegate includedLinkLabel:self didSelectLinkWithURL:result.URL];
             }
         }
+    }
+}
+- (void)handlePan:(UIPanGestureRecognizer *)gestureRecognizer
+{
+    if (self.activeLink) {
+        [self setActiveLink:nil];
     }
 }
 
